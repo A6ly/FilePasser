@@ -206,6 +206,7 @@
     <ResourceCompile Include="FilePasserClient.rc" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="cpp.hint" />
     <None Include="res\FilePasserClient.rc2" />
   </ItemGroup>
   <ItemGroup>

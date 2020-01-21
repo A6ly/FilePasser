@@ -11,6 +11,8 @@
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
+#define PORT 30000
+#define BUF_SIZE 700000
 #endif
 
 
@@ -22,9 +24,9 @@ public:
 	CAboutDlg();
 
 // 대화 상자 데이터입니다.
-#ifdef AFX_DESIGN_TIME
+
 	enum { IDD = IDD_ABOUTBOX };
-#endif
+
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 지원입니다.
@@ -54,12 +56,15 @@ END_MESSAGE_MAP()
 CFilePasserClientDlg::CFilePasserClientDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_FILEPASSERCLIENT_DIALOG, pParent)
 {
+	
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
 
 void CFilePasserClientDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+
+
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
@@ -71,7 +76,8 @@ BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_PORT_EDIT, &CFilePasserClientDlg::OnEnChangePortEdit)
 	ON_BN_CLICKED(IDC_Log, &CFilePasserClientDlg::OnBnClickedLog)
 	ON_BN_CLICKED(IDC_BUTTON_FILESEND, &CFilePasserClientDlg::OnBnClickedButtonFilesend)
-	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
+//	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
+ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
 END_MESSAGE_MAP()
 
 
@@ -107,6 +113,7 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
@@ -203,16 +210,51 @@ void CFilePasserClientDlg::OnBnClickedLog()
 
 CString str;
 
-void CFilePasserClientDlg::OnBnClickedButtonFilesend()
-{
-	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
-	m_SocketClient.FileSend();
-
-}
-
-
 void CFilePasserClientDlg::OnBnClickedButtonConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	CString strIp;
+	int strPort;
+	GetDlgItemText(IDC_IP_EDIT, strIp);
+	strPort = GetDlgItemInt(IDC_PORT_EDIT);
+
+	m_SocketClient.SetWnd(this->m_hWnd);
+	m_SocketClient.Create();
+	if (m_SocketClient.Connect(strIp, strPort) == FALSE) {
+		AfxMessageBox(_T("ERROR : Failed to connect Server"));
+		PostQuitMessage(0);
+		return;
+	}
+}
+
+
+void CFilePasserClientDlg::OnBnClickedButtonFilesend()
+{
+	CString strFileName_send;
+	CString strFilePath_send;
+	CFile sendFile_send;
+
+	CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+	if (fd1.DoModal() == IDOK) {
+		strFilePath_send = fd1.GetPathName();
+		sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
+		
+		byte* data_send = new byte[BUF_SIZE];
+
+		strFileName_send = sendFile_send.GetFileName();
+
+
+		DWORD dwRead_send;
+
+		do
+		{
+			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+			m_SocketClient.Send(data_send, dwRead_send);
+
+		} while (dwRead_send > 0);
+
+		sendFile_send.Close();
+		strFileName_send.ReleaseBuffer(-1);
+	}
 }

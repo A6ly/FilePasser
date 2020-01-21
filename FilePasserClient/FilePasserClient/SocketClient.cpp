@@ -1,33 +1,46 @@
+﻿// SocketClient.cpp: 구현 파일
+//
+
 #include "pch.h"
+#include "FilePasserClient.h"
 #include "SocketClient.h"
-#include "stdlib.h"
-#include "stdio.h"
-#include "WinSock2.h"
-
-#define BUFSIZE 4096
-
-#pragma warning(disable:4996)
 
 
-void SocketClient::FileSend() {
-	CFileDialog fdlg(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+// SocketClient
 
-	if (IDOK == fdlg.DoModal()) {
-		CString strPathName = fdlg.GetPathName();
-		CFile fp;
-		CFileException e;
+SocketClient::SocketClient()
+{
+}
 
-		if (!fp.Open(strPathName, CFile::modeRead, &e)) {
-			e.ReportError();
-			return;
-		}
-		CString file;
-		CArchive ar(&fp, CArchive::load);
-		ar >> file;
+SocketClient::~SocketClient()
+{
+}
+
+
+// SocketClient 멤버 함수
+
+void SocketClient::SetWnd(HWND hWnd) {
+	m_hWnd = hWnd;
+}
+
+void SocketClient::OnReceive(int nErrorCode) {
+	TCHAR szBuffer[1024];
+	ZeroMemory(szBuffer, sizeof(szBuffer));
+
+	if (Receive(szBuffer, sizeof(szBuffer)) > 0) {
+		SendMessage(m_hWnd, WM_CLIENT_RECV, 0, (LPARAM)szBuffer);
 	}
 
+	CSocket::OnReceive(nErrorCode);
 
+}
 
+void SocketClient::OnClose(int nErrorCode) {
+	ShutDown();
+	Close();
 
+	CSocket::OnClose(nErrorCode);
 
+	AfxMessageBox(_T("ERROR:Disconnected from server!"));
+	PostQuitMessage(0);
 }

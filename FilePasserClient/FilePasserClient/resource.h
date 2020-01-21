@@ -14,7 +14,6 @@
 #define IDC_PROTOCOL                    1005
 #define IDC_IP_EDIT                     1006
 #define IDC_PORT_EDIT                   1007
-#define IDC_CONNECT_BUTTOn              1008
 #define IDC_BUTTON_CONNECT              1008
 #define IDC_Log                         1011
 #define IDC_LOG_LIST                    1012

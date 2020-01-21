@@ -15,15 +15,18 @@ public:
 	SocketClient m_SocketClient;
 
 // 대화 상자 데이터입니다.
-#ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_FILEPASSERCLIENT_DIALOG };
-#endif
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV 지원입니다.
 
+private:
+
 
 // 구현입니다.
+public:
+
+
 protected:
 	HICON m_hIcon;
 
