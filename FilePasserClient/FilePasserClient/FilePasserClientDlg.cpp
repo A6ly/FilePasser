@@ -12,7 +12,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #define PORT 30000
-#define BUF_SIZE 700000
+#define BUF_SIZE 1048576
 #endif
 
 
@@ -235,7 +235,8 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 		}
 	}
 	else if (index == 2) {
-
+		m_SocketClient.SetWnd(this->m_hWnd);
+		m_SocketClient.Create(strPort, SOCK_DGRAM, strIp);
 	}
 	else if (index == 3) {
 
@@ -249,7 +250,7 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 {
 	int NameLength_send;
-	CString strFileName_send;
+	CStringA strFileName_send;
 	CString strFilePath_send;
 	CFile sendFile_send;
 
@@ -257,16 +258,16 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 	if (fd1.DoModal() == IDOK) {
 		strFilePath_send = fd1.GetPathName();
 		sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
-		
-		byte* data_send = new byte[BUF_SIZE];
 
 		strFileName_send = sendFile_send.GetFileName();
-
-
-		m_SocketClient.Send(&NameLength_send, 4);
+		//m_SocketClient.Send(&NameLength_send, 4);
 		NameLength_send = fd1.GetFileName().GetLength();
+		char* strName_send = new char[NameLength_send];
 		strFileName_send = sendFile_send.GetFileName();
-		m_SocketClient.Send(strFileName_send, NameLength_send);
+		strName_send = strFileName_send.GetBuffer(NameLength_send);
+		m_SocketClient.Send(strName_send, NameLength_send);
+
+		byte* data_send = new byte[BUF_SIZE];
 
 		DWORD dwRead_send;
 
@@ -279,5 +280,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 		sendFile_send.Close();
 		strFileName_send.ReleaseBuffer(-1);
+
+		delete data_send;
 	}
 }
