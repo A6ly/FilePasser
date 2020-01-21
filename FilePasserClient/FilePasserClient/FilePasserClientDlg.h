@@ -43,4 +43,5 @@ public:
 	afx_msg void OnBnClickedLog();
 	afx_msg void OnBnClickedButtonFilesend();
 	afx_msg void OnBnClickedButtonConnect();
+	CComboBox m_comboProtocolList;
 };

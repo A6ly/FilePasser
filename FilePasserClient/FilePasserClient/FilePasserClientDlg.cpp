@@ -65,6 +65,7 @@ void CFilePasserClientDlg::DoDataExchange(CDataExchange* pDX)
 	CDialogEx::DoDataExchange(pDX);
 
 
+	DDX_Control(pDX, IDC_PROTOCOL_COMBO, m_comboProtocolList);
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
@@ -113,6 +114,10 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	m_comboProtocolList.AddString(_T("TCP/IP"));
+	m_comboProtocolList.AddString(_T("UDP Unicast"));
+	m_comboProtocolList.AddString(_T("UDP Multicast"));
+	m_comboProtocolList.AddString(_T("UDP broadcast"));
 
 
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
@@ -213,24 +218,37 @@ CString str;
 void CFilePasserClientDlg::OnBnClickedButtonConnect()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
-
+	int index = m_comboProtocolList.GetCurSel();
+	index += 1;
 	CString strIp;
 	int strPort;
 	GetDlgItemText(IDC_IP_EDIT, strIp);
 	strPort = GetDlgItemInt(IDC_PORT_EDIT);
+	
+	if (index == 1) {
+		m_SocketClient.SetWnd(this->m_hWnd);
+		m_SocketClient.Create();
+		if (m_SocketClient.Connect(strIp, strPort) == FALSE) {
+			AfxMessageBox(_T("ERROR : Failed to connect Server"));
+			PostQuitMessage(0);
+			return;
+		}
+	}
+	else if (index == 2) {
 
-	m_SocketClient.SetWnd(this->m_hWnd);
-	m_SocketClient.Create();
-	if (m_SocketClient.Connect(strIp, strPort) == FALSE) {
-		AfxMessageBox(_T("ERROR : Failed to connect Server"));
-		PostQuitMessage(0);
-		return;
+	}
+	else if (index == 3) {
+
+	}
+	else if (index == 4) {
+
 	}
 }
 
 
 void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 {
+	int NameLength_send;
 	CString strFileName_send;
 	CString strFilePath_send;
 	CFile sendFile_send;
@@ -244,6 +262,11 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 		strFileName_send = sendFile_send.GetFileName();
 
+
+		m_SocketClient.Send(&NameLength_send, 4);
+		NameLength_send = fd1.GetFileName().GetLength();
+		strFileName_send = sendFile_send.GetFileName();
+		m_SocketClient.Send(strFileName_send, NameLength_send);
 
 		DWORD dwRead_send;
 

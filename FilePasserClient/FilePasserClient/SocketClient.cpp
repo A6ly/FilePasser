@@ -41,6 +41,6 @@ void SocketClient::OnClose(int nErrorCode) {
 
 	CSocket::OnClose(nErrorCode);
 
-	AfxMessageBox(_T("ERROR:Disconnected from server!"));
+	AfxMessageBox(_T("ERROR : Disconnected from server!"));
 	PostQuitMessage(0);
 }
