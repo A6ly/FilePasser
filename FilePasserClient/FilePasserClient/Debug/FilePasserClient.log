@@ -1,2 +1,8 @@
-﻿  FilePasserClientDlg.cpp
+﻿  FilePasserClient.cpp
+  FilePasserClientDlg.cpp
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(376,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(429,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(482,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+  SocketClient.cpp
+  코드를 생성하고 있습니다...
   FilePasserClient.vcxproj -> C:\Users\user\Desktop\vs2019\FilePasserClient\Debug\FilePasserClient.exe
