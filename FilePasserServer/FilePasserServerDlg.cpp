@@ -8,11 +8,14 @@
 #include "FilePasserServerDlg.h"
 #include "afxdialogex.h"
 #include "SocketServer.h"
+#include <afxwin.h>
+#include <Windows.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 
+enum NetType { TYPE_NONE = 0, TYPE_TCP = 1, TYPE_UDP = 2 };
 
 // CAboutDlg dialog used for App About
 
@@ -49,10 +52,9 @@ END_MESSAGE_MAP()
 
 // CFilePasserServerDlg dialog
 
-
-
 CFilePasserServerDlg::CFilePasserServerDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent)
+	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent), m_socketServer(new SocketServer) , m_netType(0)
+	, m_combo_protocol(nullptr)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 }
@@ -66,10 +68,17 @@ BEGIN_MESSAGE_MAP(CFilePasserServerDlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_BN_CLICKED(IDC_STARTBUTTON, &CFilePasserServerDlg::OnBnClickedStartbutton)
 	ON_WM_GETMINMAXINFO()
 	ON_LBN_SELCHANGE(IDC_SERVER__LOGLIST, &CFilePasserServerDlg::OnLbnSelchangeServer)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_DOWNLOAD__PROGRESS, &CFilePasserServerDlg::OnNMCustomdrawDownload)
+	ON_BN_CLICKED(IDC_CONNECT_BUTTON, &CFilePasserServerDlg::OnBnClickedConnectButton)
+	ON_BN_CLICKED(IDC_RADIO_SOCKET, &CFilePasserServerDlg::OnBnClickedRadioSocket)
+	ON_BN_CLICKED(IDC_RADIO_RS232, &CFilePasserServerDlg::OnBnClickedRadioRs232)
+	ON_CBN_SELCHANGE(IDC_COMBO_PROTOCOL, &CFilePasserServerDlg::OnCbnSelchangeComboProtocol)
+	ON_CBN_SELCHANGE(IDC_COMBO_COMPROT, &CFilePasserServerDlg::OnCbnSelchangeComboComprot)
+	ON_CBN_SELCHANGE(IDC_COMBO_BAUDRATE, &CFilePasserServerDlg::OnCbnSelchangeComboBaudrate)
+	ON_BN_CLICKED(IDC_BUTTON_OPEN, &CFilePasserServerDlg::OnBnClickedButtonOpen)
+	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CFilePasserServerDlg::OnBnClickedButtonClose)
 END_MESSAGE_MAP()
 
 
@@ -105,6 +114,14 @@ BOOL CFilePasserServerDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// Set small icon
 
 	// TODO: Add extra initialization here
+	//GetDlgItem(IDC_CONNECT_BUTTON)->ShowWindow(TRUE);
+
+	GetDlgItem(IDC_COMBO_COMPROT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COMBO_BAUDRATE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_OPEN)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(FALSE);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -161,23 +178,64 @@ HCURSOR CFilePasserServerDlg::OnQueryDragIcon()
 void CFilePasserServerDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 {
 	// WindowSize 크기 설정
-	lpMMI->ptMinTrackSize.x = 650;
-	lpMMI->ptMinTrackSize.y = 500;
+	lpMMI->ptMinTrackSize.x = 800;
+	lpMMI->ptMinTrackSize.y = 600;
 
-	lpMMI->ptMaxTrackSize.x = 650;
-	lpMMI->ptMaxTrackSize.y = 500;
+	lpMMI->ptMaxTrackSize.x = 800;
+	lpMMI->ptMaxTrackSize.y = 600;
 	CDialogEx::OnGetMinMaxInfo(lpMMI);
 }
 
-// 버튼 클릭 시 소켓 open
-void CFilePasserServerDlg::OnBnClickedStartbutton()
+// Start 버튼 클릭 시 소켓 open
+void CFilePasserServerDlg::OnBnClickedConnectButton()
 {
-	SocketServer* socketServer = new SocketServer();
-	if (socketServer->TCPServerStart())
+	promise<void> exitSignal;
+	future<void> futureObj = exitSignal.get_future();
+	thread threadObj;
+	
+	//if (TYPE_NONE != m_netType)
+		
+	/*GetDlgItem(IDC_CONNECT_BUTTON)->ShowWindow(FALSE);
+	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
+	GetDlgItem(IDC_STOP_BUTTON)->ShowWindow(TRUE);
+	GetDlgItem(IDC_STOP_BUTTON)->EnableWindow(TRUE);*/
+
+	/*if (NetType::TYPE_TCP == m_netType)
 	{
-		cout << "go" << endl;
+		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
+		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
+
+		//threadObj = std::thread([&]() {m_socketServer->TCPServerStart(); });
+		threadObj = std::thread(&SocketServer::TCPServerStart, m_socketServer);
+		threadObj.detach();
+
+		if (threadObj.joinable())
+			threadObj.join();
+		m_netType = 0;
 	}
+	else if (NetType::TYPE_UDP == m_netType)
+	{
+		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
+		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
+
+		/*threadObj = std::thread(&SocketServer::UDPServerStart, m_socketServer, move(futureObj));
+		threadObj.detach();
+
+		m_netType = 0;
+	}
+	else
+	{
+		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Start");
+		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(true);
+
+		/*m_socketServer->stop();
+		if (threadObj.joinable())
+			threadObj.join();
+		m_socketServer->~SocketServer();
+		m_socketServer = new SocketServer;
+	}*/
 }
+
 
 // 클라이언트-서버 로그 출력 List
 void CFilePasserServerDlg::OnLbnSelchangeServer()
@@ -191,4 +249,53 @@ void CFilePasserServerDlg::OnNMCustomdrawDownload(NMHDR* pNMHDR, LRESULT* pResul
 	LPNMCUSTOMDRAW pNMCD = reinterpret_cast<LPNMCUSTOMDRAW>(pNMHDR);
 	// TODO: Add your control notification handler code here
 	*pResult = 0;
+}
+
+void CFilePasserServerDlg::OnBnClickedRadioSocket()
+{
+	GetDlgItem(IDC_COMBO_COMPROT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COMBO_BAUDRATE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_OPEN)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
+
+	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(TRUE);
+	GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(TRUE);
+}
+
+void CFilePasserServerDlg::OnBnClickedRadioRs232()
+{
+	GetDlgItem(IDC_COMBO_COMPROT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_COMBO_BAUDRATE)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_OPEN)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(TRUE);
+
+	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(FALSE);
+}
+
+void CFilePasserServerDlg::OnCbnSelchangeComboProtocol()
+{
+	m_combo_protocol = static_cast<CComboBox*>(GetDlgItem(IDC_COMBO_PROTOCOL));
+	m_netType = static_cast<short>(m_combo_protocol->GetCurSel());
+	m_netType += 1;
+}
+
+void CFilePasserServerDlg::OnCbnSelchangeComboComprot()
+{
+	// TODO: Add your control notification handler code here
+}
+
+void CFilePasserServerDlg::OnCbnSelchangeComboBaudrate()
+{
+	// TODO: Add your control notification handler code here
+}
+
+void CFilePasserServerDlg::OnBnClickedButtonOpen()
+{
+	// TODO: Add your control notification handler code here
+}
+
+void CFilePasserServerDlg::OnBnClickedButtonClose()
+{
+	// TODO: Add your control notification handler code here
 }

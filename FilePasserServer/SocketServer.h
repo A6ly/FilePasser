@@ -7,17 +7,24 @@ class SocketServer
 public:
 	SocketServer();
 
-	BOOL TCPServerStart();
+	void TCPServerStart();
 
-	void getMessage();
+	void UDPServerStart();
+
+	void initWinsock();
+
+	void getLogMessage();
 
 	virtual ~SocketServer();
 
 protected:
 
 private:
+	CString m_eStr;
+	SOCKET m_socket;
+	SOCKET m_accept;
+	FILE *m_fp;
 	int m_error;
-	SOCKET m_TCPSocket;
 };
 
 

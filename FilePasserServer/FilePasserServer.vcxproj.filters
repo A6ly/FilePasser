@@ -30,10 +30,10 @@
     <ClInclude Include="Resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="pch.h">
+    <ClInclude Include="SocketServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SocketServer.h">
+    <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -11,5 +11,8 @@
 #include "framework.h"
 #include <WinSock2.h>
 #include <iostream>
+#include <thread>
+#include <future>
+using namespace std;
 
 #endif //PCH_H
