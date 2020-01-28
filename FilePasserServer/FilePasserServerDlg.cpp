@@ -15,7 +15,7 @@
 #define new DEBUG_NEW
 #endif
 
-enum NetType { TYPE_NONE = 0, TYPE_TCP = 1, TYPE_UDP = 2 };
+enum NetType { TYPE_NONE = 0, TYPE_TCP = 1, TYPE_UDP_UNI = 2, TYPE_UDP_BROAD = 3, TYPE_UDP_MULTI = 4 };
 
 // CAboutDlg dialog used for App About
 
@@ -186,40 +186,54 @@ void CFilePasserServerDlg::OnGetMinMaxInfo(MINMAXINFO* lpMMI)
 	CDialogEx::OnGetMinMaxInfo(lpMMI);
 }
 
+std::thread threadObj;
+
 // Start 버튼 클릭 시 소켓 open
 void CFilePasserServerDlg::OnBnClickedConnectButton()
 {
-	promise<void> exitSignal;
-	future<void> futureObj = exitSignal.get_future();
-	thread threadObj;
+	//future<void> thread;
 	
-	//if (TYPE_NONE != m_netType)
-		
-	/*GetDlgItem(IDC_CONNECT_BUTTON)->ShowWindow(FALSE);
-	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
-	GetDlgItem(IDC_STOP_BUTTON)->ShowWindow(TRUE);
-	GetDlgItem(IDC_STOP_BUTTON)->EnableWindow(TRUE);*/
-
-	/*if (NetType::TYPE_TCP == m_netType)
+	SocketServer server;
+	if (NetType::TYPE_TCP == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		//threadObj = std::thread([&]() {m_socketServer->TCPServerStart(); });
-		threadObj = std::thread(&SocketServer::TCPServerStart, m_socketServer);
-		threadObj.detach();
+		//thread = async([&]() {m_socketServer->TCPServerStart(); });
+		m_socketServer->TCPServerStart();
 
-		if (threadObj.joinable())
-			threadObj.join();
+//		threadObj = std::thread([&]() { m_socketServer->TCPServerStart(); });
+		//threadObj.detach();
+		/*if (threadObj.joinable())
+			threadObj.join();*/
 		m_netType = 0;
 	}
-	else if (NetType::TYPE_UDP == m_netType)
+	else if (NetType::TYPE_UDP_UNI == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		/*threadObj = std::thread(&SocketServer::UDPServerStart, m_socketServer, move(futureObj));
-		threadObj.detach();
+		m_socketServer->UDPServerStart();
+
+//		threadObj = std::thread([&]() { m_socketServer->UDPServerStart(); });
+
+		m_netType = 0;
+	}
+	else if (NetType::TYPE_UDP_BROAD == m_netType)
+	{
+		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
+		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
+
+		m_socketServer->UDPBroadServerStart();
+
+		m_netType = 0;
+	}
+	else if (NetType::TYPE_UDP_MULTI == m_netType)
+	{
+		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
+		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
+
+		m_socketServer->UDPMultiServerStart();
 
 		m_netType = 0;
 	}
@@ -227,13 +241,12 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Start");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(true);
-
-		/*m_socketServer->stop();
+		
+		m_socketServer->~SocketServer();
 		if (threadObj.joinable())
 			threadObj.join();
-		m_socketServer->~SocketServer();
 		m_socketServer = new SocketServer;
-	}*/
+	}
 }
 
 
@@ -277,7 +290,6 @@ void CFilePasserServerDlg::OnCbnSelchangeComboProtocol()
 {
 	m_combo_protocol = static_cast<CComboBox*>(GetDlgItem(IDC_COMBO_PROTOCOL));
 	m_netType = static_cast<short>(m_combo_protocol->GetCurSel());
-	m_netType += 1;
 }
 
 void CFilePasserServerDlg::OnCbnSelchangeComboComprot()

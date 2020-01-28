@@ -11,6 +11,10 @@ public:
 
 	void UDPServerStart();
 
+	void UDPBroadServerStart();
+
+	void UDPMultiServerStart();
+
 	void initWinsock();
 
 	void getLogMessage();

@@ -7,10 +7,12 @@
 #include <filesystem>
 #include <chrono>
 
-#define PORT 2020
+#define PORT 20200
 #define MAX_CONNECTION 5
-#define IP_ADDR "192.168.0.27"
-#define BUF_SIZE 1000000
+#define ADDR_IP "192.168.0.27"
+#define ADDR_GROUP "235.0.0.27"
+#define BUF_SIZE 100000
+#define SIZE 1500
 #define PATH_SIZE 100
 
 // SocketServer
@@ -54,9 +56,9 @@ void SocketServer::TCPServerStart()
 	}
 
 	// 家南 林家 备炼眉 急攫
-	struct sockaddr_in server, client;									
-	server.sin_addr.S_un.S_addr = inet_addr(IP_ADDR);
+	struct sockaddr_in server, client;				
 	server.sin_family = AF_INET;
+	server.sin_addr.S_un.S_addr = INADDR_ANY;
 	server.sin_port = htons(PORT);
 
 	// 家南 官牢爹
@@ -77,7 +79,6 @@ void SocketServer::TCPServerStart()
 		return;
 	}
 
-	//SOCKET static acceptSocket;
 	int clientLen = sizeof(struct sockaddr_in);
 
 	// 家南 Accept
@@ -87,7 +88,6 @@ void SocketServer::TCPServerStart()
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Accept failed Error Code: %d"), m_error);
 		AfxMessageBox(m_eStr);
-		closesocket(m_accept);
 		return;
 	}
 
@@ -95,14 +95,13 @@ void SocketServer::TCPServerStart()
 	int bytes, totalBytes, bufferNum, totalBufferNum;
 	long file_size;
 	int fileNameSize = 0;
-	//futureObj.wait_for(chrono::microseconds(1)) == future_status::timeout
 	while (1)
 	{
 		char* path = new char[PATH_SIZE];
-
-		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		char* buf = new char[BUF_SIZE];
 		char nameBuf[20];
+
+		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, BUF_SIZE);
 		fileNameSize = recv(m_accept, nameBuf, 20, 0);
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
@@ -135,21 +134,14 @@ void SocketServer::TCPServerStart()
 			{
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
 				AfxMessageBox(m_eStr);
+				SocketServer::~SocketServer();
 				return;
-			}
-			else
-			{
-				m_eStr.Format(_T("client disconnected server"));
-				AfxMessageBox(m_eStr);
-				exit(1);
 			}
 		}	
 		// 颇老 历厘 滚欺客 版肺 且寸 秦力
 		fclose(m_fp);
 		delete[] path;
 	}
-
-	SocketServer::~SocketServer();
 	//return;
 }
 
@@ -168,7 +160,7 @@ void SocketServer::UDPServerStart()
 
 	struct sockaddr_in server, client;
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(IP_ADDR);
+	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
 	server.sin_port = htons(PORT);
 
 	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
@@ -183,40 +175,218 @@ void SocketServer::UDPServerStart()
 	long file_size;
 	int fileNameSize = 0;
 
-	int len;
-	len = sizeof(client);
-	char* buf = new char[BUF_SIZE];
-	char* path = new char[PATH_SIZE];
-	char nameBuf[20];
-
-	strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
-	memset(buf, 0, BUF_SIZE);
-	fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&client, &len);
-	strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
-
-	file_size = atol(buf);
-	totalBufferNum = file_size / BUF_SIZE + 1;
-	bufferNum = 0;
-	totalBytes = 0;
-
-	errno_t ferr = fopen_s(&m_fp, path, "wb");
-
-	if (ferr != 0)
+	while (1)
 	{
-		m_eStr.Format(_T("File open error Code: %d"), ferr);
+		int len = sizeof(server);
+		char* buf = new char[SIZE];
+		char* path = new char[PATH_SIZE];
+		char nameBuf[100];
+
+		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
+		memset(buf, 0, SIZE);
+		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
+
+		file_size = atol(buf);
+		totalBufferNum = file_size / SIZE + 1;
+		bufferNum = 0;
+		totalBytes = 0;
+
+		errno_t ferr = fopen_s(&m_fp, path, "wb");
+
+		if (ferr != 0)
+		{
+			m_eStr.Format(_T("File open error Code: %d"), ferr);
+			AfxMessageBox(m_eStr);
+			return;
+		}
+
+		int i = 0;
+		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
+		{
+			if (bytes == SOCKET_ERROR)
+			{
+				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+				AfxMessageBox(m_eStr);
+				return;
+			}
+
+			bufferNum++;
+			totalBytes += bufferNum;
+			fwrite(buf, sizeof(char), bytes, m_fp);
+		}
+		fclose(m_fp);
+		delete[] path;
+	}
+}
+
+void SocketServer::UDPBroadServerStart()
+{
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (m_socket == INVALID_SOCKET)
+	{
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
 		AfxMessageBox(m_eStr);
 		return;
 	}
 
-	while (totalBufferNum != bufferNum)
+	char broadcast = '1';
+
+	if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
 	{
-		if ((bytes = recvfrom(m_socket, buf, BUF_SIZE, 0, (SOCKADDR*)&client, &len)) != 0)
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
+		AfxMessageBox(m_eStr);
+		return;
+	}
+
+	struct sockaddr_in server;
+	server.sin_family = AF_INET;
+	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
+	server.sin_port = htons(PORT);
+
+	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)
+	{
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
+		AfxMessageBox(m_eStr);
+		return;
+	}
+
+	int bytes, totalBytes, bufferNum, totalBufferNum;
+	long file_size;
+	int fileNameSize = 0;
+
+	while (1)
+	{
+		int len = sizeof(server);
+		char* buf = new char[SIZE];
+		char* path = new char[PATH_SIZE];
+		char nameBuf[100];
+
+		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
+		memset(buf, 0, SIZE);
+		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
+
+		file_size = atol(buf);
+		totalBufferNum = file_size / SIZE + 1;
+		bufferNum = 0;
+		totalBytes = 0;
+
+		errno_t ferr = fopen_s(&m_fp, path, "wb");
+
+		if (ferr != 0)
 		{
-			bufferNum++;
-			totalBufferNum += bufferNum;
-			fwrite(buf, sizeof(char), bytes, m_fp);
+			m_eStr.Format(_T("File open error Code: %d"), ferr);
+			AfxMessageBox(m_eStr);
+			return;
 		}
 
+		int i = 0;
+		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
+		{
+			if (bytes == SOCKET_ERROR)
+			{
+				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+				AfxMessageBox(m_eStr);
+				return;
+			}
+
+			bufferNum++;
+			totalBytes += bufferNum;
+			fwrite(buf, sizeof(char), bytes, m_fp);
+		}
+		fclose(m_fp);
+		delete[] path;
+	}
+}
+
+void SocketServer::UDPMultiServerStart()
+{
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+
+	// 家南 抗寇贸府
+	if (m_socket == INVALID_SOCKET)
+	{
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
+		AfxMessageBox(m_eStr);
+		return;
+	}
+
+	struct sockaddr_in server;
+	server.sin_family = AF_INET;
+	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
+	server.sin_port = htons(PORT);
+
+	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
+	{
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
+		AfxMessageBox(m_eStr);
+		return;
+	}
+
+	struct ip_mreq mreq;
+	mreq.imr_multiaddr.S_un.S_addr = inet_addr(ADDR_GROUP);
+	mreq.imr_interface.S_un.S_addr = htonl(INADDR_ANY);
+
+	if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0)
+	{
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
+		AfxMessageBox(m_eStr);
+		return;
+	}
+
+	int bytes, totalBytes, bufferNum, totalBufferNum;
+	long file_size;
+	int fileNameSize = 0;
+
+	while (1)
+	{
+		int len = sizeof(server);
+		char* buf = new char[SIZE];
+		char* path = new char[PATH_SIZE];
+		char nameBuf[100];
+
+		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
+		memset(buf, 0, SIZE);
+		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
+
+		file_size = atol(buf);
+		totalBufferNum = file_size / SIZE + 1;
+		bufferNum = 0;
+		totalBytes = 0;
+
+		errno_t ferr = fopen_s(&m_fp, path, "wb");
+
+		if (ferr != 0)
+		{
+			m_eStr.Format(_T("File open error Code: %d"), ferr);
+			AfxMessageBox(m_eStr);
+			return;
+		}
+
+		int i = 0;
+		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
+		{
+			if (bytes == SOCKET_ERROR)
+			{
+				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+				AfxMessageBox(m_eStr);
+				return;
+			}
+
+			bufferNum++;
+			totalBytes += bufferNum;
+			fwrite(buf, sizeof(char), bytes, m_fp);
+		}
+		fclose(m_fp);
+		delete[] path;
 	}
 }
 
