@@ -9,12 +9,16 @@
 #include "afxdialogex.h"
 #include "SocketClient.h"
 
+#pragma warning(disable:4996)
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
-#define PORT 30000
+#define TTL 64
 #define BUF_SIZE 1048576
 #endif
 
+struct sockaddr_in bcast_group;
+struct sockaddr_in mcast_group;
 
 // 응용 프로그램 정보에 사용되는 CAboutDlg 대화 상자입니다.
 
@@ -77,8 +81,8 @@ BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
 	ON_EN_CHANGE(IDC_PORT_EDIT, &CFilePasserClientDlg::OnEnChangePortEdit)
 	ON_BN_CLICKED(IDC_Log, &CFilePasserClientDlg::OnBnClickedLog)
 	ON_BN_CLICKED(IDC_BUTTON_FILESEND, &CFilePasserClientDlg::OnBnClickedButtonFilesend)
-//	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
-ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
+	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonConnect)
+	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CFilePasserClientDlg::OnBnClickedButtonClose)
 END_MESSAGE_MAP()
 
 
@@ -213,7 +217,6 @@ void CFilePasserClientDlg::OnBnClickedLog()
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 }
 
-CString str;
 
 void CFilePasserClientDlg::OnBnClickedButtonConnect()
 {
@@ -226,61 +229,285 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 	strPort = GetDlgItemInt(IDC_PORT_EDIT);
 	
 	if (index == 1) {
-		m_SocketClient.SetWnd(this->m_hWnd);
+		m_SocketClient.SetWnd(this->m_hWnd);   // Sendmessage 활용을 위한 메인의 핸들을 받는 함수
 		m_SocketClient.Create();
 		if (m_SocketClient.Connect(strIp, strPort) == FALSE) {
-			AfxMessageBox(_T("ERROR : Failed to connect Server"));
+			AfxMessageBox(_T("ERROR : Failed to connect Server"), MB_OK | MB_ICONERROR);
+			PostQuitMessage(0);   // 프로그램 종료
+			return;
+		}
+		else {
+			AfxMessageBox(_T("Successfully connected to Server"), MB_OK | MB_ICONINFORMATION);
+		}
+	}
+
+	else if (index == 2) {
+		char broadcast = '1';
+
+		m_SocketClient.SetWnd(this->m_hWnd);
+		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
 			PostQuitMessage(0);
 			return;
 		}
+		else {
+			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+		}
+		m_SocketClient.SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
+		memset(&bcast_group, 0, sizeof(bcast_group));
+		bcast_group.sin_family = AF_INET;
+		bcast_group.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
+		bcast_group.sin_port = htons(strPort);
 	}
-	else if (index == 2) {
-		m_SocketClient.SetWnd(this->m_hWnd);
-		m_SocketClient.Create(strPort, SOCK_DGRAM, strIp);
-	}
+
 	else if (index == 3) {
+		int lenght = strIp.GetLength();
+		char* strIpA = new char[lenght];
+		wcstombs(strIpA, strIp, 16);
 
+		int multi_TTL = TTL;
+
+		m_SocketClient.SetWnd(this->m_hWnd);
+		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			PostQuitMessage(0);
+			return;
+		}
+		else {
+			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+		}
+		m_SocketClient.SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
+		memset(&mcast_group, 0, sizeof(mcast_group));
+		mcast_group.sin_family = AF_INET;
+		mcast_group.sin_addr.S_un.S_addr = inet_addr("235.0.0.27");
+		mcast_group.sin_port = htons(strPort);
 	}
-	else if (index == 4) {
 
+	else if (index == 4) {
+		m_SocketClient.SetWnd(this->m_hWnd);
+		if (m_SocketClient.Create(strPort, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			PostQuitMessage(0);
+			return;
+		}
+		else {
+			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+		}
 	}
 }
 
 
 void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 {
-	int NameLength_send;
-	CStringA strFileName_send;
-	CString strFilePath_send;
-	CFile sendFile_send;
+	int index = m_comboProtocolList.GetCurSel();
+	index += 1;
+	CString strIp;
+	int strPort;
+	GetDlgItemText(IDC_IP_EDIT, strIp);
+	strPort = GetDlgItemInt(IDC_PORT_EDIT);
 
-	CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
-	if (fd1.DoModal() == IDOK) {
-		strFilePath_send = fd1.GetPathName();
-		sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
+	if (index == 1) {
+		int NameLength_send;
+		CStringA strFileName_send;
+		CString strFilePath_send;
+		CFile sendFile_send;
 
-		strFileName_send = sendFile_send.GetFileName();
-		//m_SocketClient.Send(&NameLength_send, 4);
-		NameLength_send = fd1.GetFileName().GetLength();
-		char* strName_send = new char[NameLength_send];
-		strFileName_send = sendFile_send.GetFileName();
-		strName_send = strFileName_send.GetBuffer(NameLength_send);
-		m_SocketClient.Send(strName_send, NameLength_send);
+		CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+		if (fd1.DoModal() == IDOK) {
+			strFilePath_send = fd1.GetPathName();
+			sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
 
-		byte* data_send = new byte[BUF_SIZE];
+			strFileName_send = sendFile_send.GetFileName();
+			NameLength_send = fd1.GetFileName().GetLength();
+			char* strName_send = new char[NameLength_send];
+			strFileName_send = sendFile_send.GetFileName();
+			strName_send = strFileName_send.GetBuffer(NameLength_send);
+			m_SocketClient.Send(strName_send, NameLength_send);
 
-		DWORD dwRead_send;
+			byte* data_send = new byte[BUF_SIZE];
 
-		do
-		{
-			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
-			m_SocketClient.Send(data_send, dwRead_send);
+			DWORD dwRead_send;
 
-		} while (dwRead_send > 0);
+			do
+			{
+				dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+				m_SocketClient.Send(data_send, dwRead_send);
 
-		sendFile_send.Close();
-		strFileName_send.ReleaseBuffer(-1);
+			} while (dwRead_send > 0);
 
-		delete data_send;
+			sendFile_send.Close();
+			strFileName_send.ReleaseBuffer(-1);
+
+			strName_send = NULL;
+			delete strName_send;
+			delete data_send;
+		}
 	}
+	else if (index == 2) {
+		int NameLength_send;
+		CStringA strFileName_send;
+		CString strFilePath_send;
+		CFile sendFile_send;
+
+		CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+		if (fd1.DoModal() == IDOK) {
+			strFilePath_send = fd1.GetPathName();
+			sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
+
+			strFileName_send = sendFile_send.GetFileName();
+			NameLength_send = fd1.GetFileName().GetLength();
+			char* strName_send = new char[NameLength_send];
+			strFileName_send = sendFile_send.GetFileName();
+			strName_send = strFileName_send.GetBuffer(NameLength_send);
+			m_SocketClient.SendTo(strName_send, NameLength_send, (struct sockaddr *)&bcast_group, sizeof(bcast_group));
+
+			byte* data_send = new byte[BUF_SIZE];
+
+			DWORD dwRead_send;
+
+			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+
+			char buf[1500];
+			memset(buf, 0, sizeof(buf));
+
+			int size = 0;
+			int sendsize = 1500;
+
+			while (sendsize > 0) {
+				if (dwRead_send < sendsize)
+					sendsize = dwRead_send;
+
+				memcpy(buf, &data_send[size], sendsize);
+				sendsize = m_SocketClient.SendTo(buf, sendsize, (struct sockaddr*) & bcast_group, sizeof(bcast_group));
+
+				if (sendsize == 0)
+					continue;
+
+				dwRead_send -= sendsize;
+				size += sendsize;
+			}			
+
+			sendFile_send.Close();
+			strFileName_send.ReleaseBuffer(-1);
+
+			strName_send = NULL;
+			delete strName_send;
+			delete data_send;
+		}
+	}
+
+	else if (index == 3) {
+		int NameLength_send;
+		CStringA strFileName_send;
+		CString strFilePath_send;
+		CFile sendFile_send;
+
+		CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+		if (fd1.DoModal() == IDOK) {
+			strFilePath_send = fd1.GetPathName();
+			sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
+
+			strFileName_send = sendFile_send.GetFileName();
+			NameLength_send = fd1.GetFileName().GetLength();
+			char* strName_send = new char[NameLength_send];
+			strFileName_send = sendFile_send.GetFileName();
+			strName_send = strFileName_send.GetBuffer(NameLength_send);
+			m_SocketClient.SendTo(strName_send, NameLength_send, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
+
+			byte* data_send = new byte[BUF_SIZE];
+
+			DWORD dwRead_send;
+			
+			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+
+			char buf[1500];
+			memset(buf, 0, sizeof(buf));
+
+			int size = 0;
+			int sendsize = 1500;
+
+			while (sendsize > 0) {
+				if (dwRead_send < sendsize)
+					sendsize = dwRead_send;
+
+				memcpy(buf, &data_send[size], sendsize);
+				sendsize = m_SocketClient.SendTo(buf, sendsize, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
+
+				if (sendsize == 0)
+					continue;
+
+				dwRead_send -= sendsize;
+				size += sendsize;
+			}
+
+			sendFile_send.Close();
+			strFileName_send.ReleaseBuffer(-1);
+
+			strName_send = NULL;
+			delete strName_send;
+			delete data_send;
+		}
+	}
+
+	else if (index == 4) {
+		int NameLength_send;
+		CStringA strFileName_send;
+		CString strFilePath_send;
+		CFile sendFile_send;
+
+		CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
+		if (fd1.DoModal() == IDOK) {
+			strFilePath_send = fd1.GetPathName();
+			sendFile_send.Open(strFilePath_send, CFile::modeRead | CFile::typeBinary);
+
+			strFileName_send = sendFile_send.GetFileName();
+			NameLength_send = fd1.GetFileName().GetLength();
+			char* strName_send = new char[NameLength_send];
+			strFileName_send = sendFile_send.GetFileName();
+			strName_send = strFileName_send.GetBuffer(NameLength_send);
+			m_SocketClient.SendTo(strName_send, NameLength_send, strPort, strIp);
+
+			byte* data_send = new byte[BUF_SIZE];
+
+			DWORD dwRead_send;
+
+			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+
+			char buf[1500];
+			memset(buf, 0, sizeof(buf));
+			
+			int size = 0;
+			int sendsize = 1500;
+
+			while (sendsize > 0) {
+				if (dwRead_send < sendsize)
+					sendsize = dwRead_send;
+
+				memcpy(buf, &data_send[size], sendsize);
+				sendsize = m_SocketClient.SendTo(buf, sendsize, strPort, strIp);
+
+				if (sendsize == 0)
+					continue;
+
+				dwRead_send -= sendsize;
+				size += sendsize;
+			}
+
+			sendFile_send.Close();
+			strFileName_send.ReleaseBuffer(-1);
+
+			strName_send = NULL;
+			delete strName_send;
+			delete data_send;
+		}
+	}
+}
+
+
+void CFilePasserClientDlg::OnBnClickedButtonClose()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
+
+	m_SocketClient.Close();
+	AfxMessageBox(_T("Successful Socket close"), MB_OK | MB_ICONINFORMATION);
 }

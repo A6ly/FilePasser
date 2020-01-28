@@ -1,2 +1,5 @@
 ﻿  FilePasserClientDlg.cpp
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(377,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(430,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(483,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
   FilePasserClient.vcxproj -> C:\Users\user\Desktop\vs2019\FilePasserClient\Debug\FilePasserClient.exe
