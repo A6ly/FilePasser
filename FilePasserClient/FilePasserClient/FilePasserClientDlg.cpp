@@ -13,7 +13,7 @@
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
-#define PORT 2020
+#define TTL 64
 #define BUF_SIZE 1048576
 #endif
 
@@ -242,6 +242,8 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 	}
 
 	else if (index == 2) {
+		char broadcast = '1';
+
 		m_SocketClient.SetWnd(this->m_hWnd);
 		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
 			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
@@ -251,20 +253,19 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
 		}
-		m_SocketClient.SetSockOpt(SO_BROADCAST, NULL, NULL);
-		memset(&bcast_group, 0, sizeof(struct sockaddr_in));
+		m_SocketClient.SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
+		memset(&bcast_group, 0, sizeof(bcast_group));
 		bcast_group.sin_family = AF_INET;
 		bcast_group.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
-		bcast_group.sin_port = htons(PORT);
+		bcast_group.sin_port = htons(strPort);
 	}
 
 	else if (index == 3) {
-		CString strIp;
-		int strPort;
-		GetDlgItemText(IDC_IP_EDIT, strIp);
-		strPort = GetDlgItemInt(IDC_PORT_EDIT);
+		int lenght = strIp.GetLength();
+		char* strIpA = new char[lenght];
+		wcstombs(strIpA, strIp, 16);
 
-		char* strIp2 = LPSTR(LPCTSTR(strIp));
+		int multi_TTL = TTL;
 
 		m_SocketClient.SetWnd(this->m_hWnd);
 		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
@@ -275,10 +276,10 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
 		}
-		m_SocketClient.SetSockOpt(IP_MULTICAST_TTL, NULL, NULL);
+		m_SocketClient.SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
 		memset(&mcast_group, 0, sizeof(mcast_group));
 		mcast_group.sin_family = AF_INET;
-		mcast_group.sin_addr.S_un.S_addr = inet_addr(strIp2);
+		mcast_group.sin_addr.S_un.S_addr = inet_addr("235.0.0.27");
 		mcast_group.sin_port = htons(strPort);
 	}
 
@@ -358,7 +359,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			char* strName_send = new char[NameLength_send];
 			strFileName_send = sendFile_send.GetFileName();
 			strName_send = strFileName_send.GetBuffer(NameLength_send);
-			m_SocketClient.SendTo(strName_send, NameLength_send, (const struct sockaddr *)&bcast_group, sizeof(struct sockaddr_in));
+			m_SocketClient.SendTo(strName_send, NameLength_send, (struct sockaddr *)&bcast_group, sizeof(bcast_group));
 
 			byte* data_send = new byte[BUF_SIZE];
 
@@ -366,18 +367,18 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
-			char buf[30000];
+			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 
 			int size = 0;
-			int sendsize = 30000;
+			int sendsize = 1500;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
 					sendsize = dwRead_send;
 
 				memcpy(buf, &data_send[size], sendsize);
-				sendsize = m_SocketClient.SendTo(buf, sendsize, (const struct sockaddr*) & bcast_group, sizeof(struct sockaddr_in));
+				sendsize = m_SocketClient.SendTo(buf, sendsize, (struct sockaddr*) & bcast_group, sizeof(bcast_group));
 
 				if (sendsize == 0)
 					continue;
@@ -419,11 +420,11 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
-			char buf[30000];
+			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 
 			int size = 0;
-			int sendsize = 30000;
+			int sendsize = 1500;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
@@ -472,11 +473,11 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
-			char buf[30000];
+			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 			
 			int size = 0;
-			int sendsize = 30000;
+			int sendsize = 1500;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
