@@ -1,0 +1,35 @@
+﻿  FilePasserServerDlg.cpp
+D:\C++\FilePasserServer\FilePasserServerDlg.cpp(207,60): error C2276: '&': illegal operation on bound member function expression
+  ServerStarter.cpp
+  SocketServer.cpp
+  The contents of <filesystem> are only available with C++17 or later.
+D:\C++\FilePasserServer\SocketServer.cpp(45,1): error C2511: 'void SocketServer::TCPServerStart(void)': overloaded member function not found in 'SocketServer'
+D:\C++\FilePasserServer\SocketServer.h(5): message : see declaration of 'SocketServer'
+D:\C++\FilePasserServer\SocketServer.cpp(47,2): error C2597: illegal reference to non-static member 'SocketServer::m_socket'
+D:\C++\FilePasserServer\SocketServer.cpp(50,32): error C2597: illegal reference to non-static member 'SocketServer::m_socket'
+D:\C++\FilePasserServer\SocketServer.cpp(50,32): error C3867: 'SocketServer::m_socket': non-standard syntax; use '&' to create a pointer to member
+D:\C++\FilePasserServer\SocketServer.cpp(52,3): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(53,60): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(54,17): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(65,13): error C2597: illegal reference to non-static member 'SocketServer::m_socket'
+D:\C++\FilePasserServer\SocketServer.cpp(67,3): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(68,51): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(69,17): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(74,13): error C2597: illegal reference to non-static member 'SocketServer::m_socket'
+D:\C++\FilePasserServer\SocketServer.cpp(76,3): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(77,53): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(78,17): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(86,24): error C2597: illegal reference to non-static member 'SocketServer::m_socket'
+D:\C++\FilePasserServer\SocketServer.cpp(89,3): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(90,53): error C2597: illegal reference to non-static member 'SocketServer::m_error'
+D:\C++\FilePasserServer\SocketServer.cpp(91,17): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(101,9): error C2065: 'futureObj': undeclared identifier
+D:\C++\FilePasserServer\SocketServer.cpp(119,27): error C2597: illegal reference to non-static member 'SocketServer::m_fp'
+D:\C++\FilePasserServer\SocketServer.cpp(119,43): error C2664: 'errno_t fopen_s(FILE **,const char *,const char *)': cannot convert argument 1 from 'FILE *SocketServer::* ' to 'FILE **'
+D:\C++\FilePasserServer\SocketServer.cpp(119,26): message : There is no context in which this conversion is possible
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.18362.0\ucrt\stdio.h(97,34): message : see declaration of 'fopen_s'
+D:\C++\FilePasserServer\SocketServer.cpp(124,18): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(134,38): error C2597: illegal reference to non-static member 'SocketServer::m_fp'
+D:\C++\FilePasserServer\SocketServer.cpp(146,19): error C2597: illegal reference to non-static member 'SocketServer::m_eStr'
+D:\C++\FilePasserServer\SocketServer.cpp(151,10): error C2597: illegal reference to non-static member 'SocketServer::m_fp'
+  Generating Code...
