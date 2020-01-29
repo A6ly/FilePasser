@@ -1,0 +1,10 @@
+﻿  SocketServer.cpp
+  The contents of <filesystem> are only available with C++17 or later.
+D:\C++\FilePasserServer\SocketServer.cpp(181,25): warning C4101: 'bufferNum': unreferenced local variable
+D:\C++\FilePasserServer\SocketServer.cpp(168,29): warning C4101: 'client': unreferenced local variable
+  Generating code
+  2 of 333 functions ( 0.6%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    3 functions had inline decision re-evaluated but remain unchanged
+  Finished generating code
+  FilePasserServer.vcxproj -> D:\C++\FilePasserServer\x64\Release\FilePasserServer.exe
