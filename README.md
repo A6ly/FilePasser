@@ -1,2 +1,5 @@
 # FilePasser
-File transmission program using protocol and serial communication
+
+WeUNUS Project
+
+2019.01.15 ~
