@@ -1,5 +1,6 @@
 ﻿  FilePasserClientDlg.cpp
-C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(377,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(430,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
-C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(483,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(336,27): warning C4244: '인수': 'DWORD'에서 'short'(으)로 변환하면서 데이터가 손실될 수 있습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(389,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(455,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
+C:\Users\user\Desktop\vs2019\FilePasserClient\FilePasserClient\FilePasserClientDlg.cpp(521,21): warning C4018: '<': signed 또는 unsigned가 일치하지 않습니다.
   FilePasserClient.vcxproj -> C:\Users\user\Desktop\vs2019\FilePasserClient\Debug\FilePasserClient.exe

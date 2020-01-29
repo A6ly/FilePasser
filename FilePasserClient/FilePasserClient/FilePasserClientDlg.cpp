@@ -7,6 +7,7 @@
 #include "FilePasserClient.h"
 #include "FilePasserClientDlg.h"
 #include "afxdialogex.h"
+#include "afxcmn.h"
 #include "SocketClient.h"
 
 #pragma warning(disable:4996)
@@ -15,6 +16,7 @@
 #define new DEBUG_NEW
 #define TTL 64
 #define BUF_SIZE 1048576
+#define PROGRESSVALUE(a, b) (int((double)(a * 100) / double) b)
 #endif
 
 struct sockaddr_in bcast_group;
@@ -70,6 +72,7 @@ void CFilePasserClientDlg::DoDataExchange(CDataExchange* pDX)
 
 
 	DDX_Control(pDX, IDC_PROTOCOL_COMBO, m_comboProtocolList);
+	DDX_Control(pDX, IDC_PROGRESS, m_progress);
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
@@ -286,7 +289,7 @@ void CFilePasserClientDlg::OnBnClickedButtonConnect()
 	else if (index == 4) {
 		m_SocketClient.SetWnd(this->m_hWnd);
 		if (m_SocketClient.Create(strPort, SOCK_DGRAM, 0) < 0) {
-			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			AfxMessageBox(_T("Can't create send Socket"), MB_OK | MB_ICONERROR);
 			PostQuitMessage(0);
 			return;
 		}
@@ -328,12 +331,16 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			DWORD dwRead_send;
 
-			do
-			{
-				dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
-				m_SocketClient.Send(data_send, dwRead_send);
+			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
-			} while (dwRead_send > 0);
+			m_progress.SetRange(0, dwRead_send);
+
+			m_SocketClient.Send(data_send, dwRead_send);
+			
+			m_progress.SetPos(dwRead_send);
+			if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
+				m_progress.SetPos(0);
+			}
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -345,6 +352,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 	}
 	else if (index == 2) {
 		int NameLength_send;
+		int fileSize;
 		CStringA strFileName_send;
 		CString strFilePath_send;
 		CFile sendFile_send;
@@ -366,12 +374,16 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			DWORD dwRead_send;
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
+			
+			fileSize = dwRead_send;
+			m_progress.SetRange(0, fileSize);
 
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 
 			int size = 0;
 			int sendsize = 1500;
+			int progressSize = 0;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
@@ -385,7 +397,15 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 				dwRead_send -= sendsize;
 				size += sendsize;
+
+				progressSize += sendsize;
+				m_progress.SetPos(progressSize);
 			}			
+			if (progressSize == fileSize) {
+				if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
+					m_progress.SetPos(0);
+				}
+			}
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -398,6 +418,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 	else if (index == 3) {
 		int NameLength_send;
+		int fileSize;
 		CStringA strFileName_send;
 		CString strFilePath_send;
 		CFile sendFile_send;
@@ -420,11 +441,15 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
+			fileSize = dwRead_send;
+			m_progress.SetRange(0, fileSize);
+
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 
 			int size = 0;
 			int sendsize = 1500;
+			int progressSize = 0;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
@@ -438,6 +463,14 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 				dwRead_send -= sendsize;
 				size += sendsize;
+
+				progressSize += sendsize;
+				m_progress.SetPos(progressSize);
+			}
+			if (progressSize == fileSize) {
+				if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
+					m_progress.SetPos(0);
+				}
 			}
 
 			sendFile_send.Close();
@@ -451,6 +484,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 	else if (index == 4) {
 		int NameLength_send;
+		int fileSize;
 		CStringA strFileName_send;
 		CString strFilePath_send;
 		CFile sendFile_send;
@@ -473,11 +507,15 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
+			fileSize = dwRead_send;
+			m_progress.SetRange(0, fileSize);
+
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
 			
 			int size = 0;
 			int sendsize = 1500;
+			int progressSize = 0;
 
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
@@ -491,6 +529,14 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 				dwRead_send -= sendsize;
 				size += sendsize;
+
+				progressSize += sendsize;
+				m_progress.SetPos(progressSize);
+			}
+			if (progressSize == fileSize) {
+				if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
+					m_progress.SetPos(0);
+				}
 			}
 
 			sendFile_send.Close();
