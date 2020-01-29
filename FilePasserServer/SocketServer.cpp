@@ -1,7 +1,7 @@
 // SocketServer.cpp : implementation file
 #pragma comment(lib, "Ws2_32.lib")
 #include "pch.h"
-#include "FilePasserServer.h"
+#include "FilePasserServerDlg.h"
 #include "SocketServer.h"
 #include <string>
 #include <filesystem>
@@ -11,12 +11,14 @@
 #define MAX_CONNECTION 5
 #define ADDR_IP "192.168.0.27"
 #define ADDR_GROUP "235.0.0.27"
-#define BUF_SIZE 100000
+#define BUF_SIZE 1000000
 #define SIZE 1500
+#define FILE_NAME_SIZE 50
 #define PATH_SIZE 100
 
 // SocketServer
-SocketServer::SocketServer() : m_socket(NULL), m_fp(nullptr), m_error(0), m_accept(NULL)
+SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress) : m_socket(NULL), m_fp(nullptr), m_error(0), m_accept(NULL)
+																				, m_logMessage(logMessage), m_fileProgress(fileProgress)
 {
 	// Winsock 초기화 
 	WSADATA wsa;
@@ -58,7 +60,7 @@ void SocketServer::TCPServerStart()
 	// 소켓 주소 구조체 선언
 	struct sockaddr_in server, client;				
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = INADDR_ANY;
+	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
 	server.sin_port = htons(PORT);
 
 	// 소켓 바인딩
@@ -71,7 +73,7 @@ void SocketServer::TCPServerStart()
 	}
 
 	// 소켓 리슨
-	if (listen(m_socket, SOMAXCONN_HINT(8) != 0))					
+	if (listen(m_socket, SOMAXCONN_HINT(MAX_CONNECTION) != 0))
 	{
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Listen failed Error Code: %d"), m_error);
@@ -82,6 +84,7 @@ void SocketServer::TCPServerStart()
 	int clientLen = sizeof(struct sockaddr_in);
 
 	// 소켓 Accept
+	m_logMessage.AddString(L"Wating accept to client socket...");
 	m_accept = accept(m_socket, (sockaddr*)&client, &clientLen);
 	if (m_accept == INVALID_SOCKET)
 	{
@@ -90,6 +93,7 @@ void SocketServer::TCPServerStart()
 		AfxMessageBox(m_eStr);
 		return;
 	}
+	m_logMessage.AddString(L"Successful client connecting");
 
 	/* 파일을 담을 바이트 크기와 버퍼 크기 */
 	int bytes, totalBytes, bufferNum, totalBufferNum;
@@ -97,13 +101,14 @@ void SocketServer::TCPServerStart()
 	int fileNameSize = 0;
 	while (1)
 	{
-		char* path = new char[PATH_SIZE];
 		char* buf = new char[BUF_SIZE];
-		char nameBuf[20];
+		char* path = new char[PATH_SIZE];
+		char nameBuf[FILE_NAME_SIZE];
 
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, BUF_SIZE);
-		fileNameSize = recv(m_accept, nameBuf, 20, 0);
+		memset(nameBuf, 0, FILE_NAME_SIZE);
+		fileNameSize = recv(m_accept, nameBuf, FILE_NAME_SIZE, 0);
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
 		file_size = atol(buf);
@@ -125,6 +130,7 @@ void SocketServer::TCPServerStart()
 		{
 			if ((bytes = recv(m_accept, buf, BUF_SIZE, 0)) != 0)
 			{
+				m_logMessage.AddString(L"Downloading file....");
 				bufferNum++;
 				totalBytes += bytes;
 				fwrite(buf, sizeof(char), bytes, m_fp);
@@ -137,10 +143,11 @@ void SocketServer::TCPServerStart()
 				SocketServer::~SocketServer();
 				return;
 			}
-		}	
+		}
 		// 파일 저장 버퍼와 경로 할당 해제
 		fclose(m_fp);
 		delete[] path;
+		m_logMessage.AddString(L"Download complete.");
 	}
 	//return;
 }
@@ -180,16 +187,22 @@ void SocketServer::UDPServerStart()
 		int len = sizeof(server);
 		char* buf = new char[SIZE];
 		char* path = new char[PATH_SIZE];
-		char nameBuf[100];
+		char nameBuf[FILE_NAME_SIZE];
 
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
-		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+
+		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
+		if (fileNameSize == -1)
+		{
+			return;
+		}
+		m_logMessage.AddString(L"Downloading file...");
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
 		file_size = atol(buf);
 		totalBufferNum = file_size / SIZE + 1;
-		bufferNum = 0;
 		totalBytes = 0;
 
 		errno_t ferr = fopen_s(&m_fp, path, "wb");
@@ -200,23 +213,22 @@ void SocketServer::UDPServerStart()
 			AfxMessageBox(m_eStr);
 			return;
 		}
-
-		int i = 0;
+ 
 		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
 		{
 			if (bytes == SOCKET_ERROR)
 			{
-				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
+				//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+				AfxMessageBox(L"Disconnected with Client");
 				return;
 			}
-
-			bufferNum++;
-			totalBytes += bufferNum;
+			totalBytes += bytes;
 			fwrite(buf, sizeof(char), bytes, m_fp);
 		}
+
 		fclose(m_fp);
 		delete[] path;
+		m_logMessage.AddString(L"Download complete.");
 	}
 }
 
@@ -263,11 +275,12 @@ void SocketServer::UDPBroadServerStart()
 		int len = sizeof(server);
 		char* buf = new char[SIZE];
 		char* path = new char[PATH_SIZE];
-		char nameBuf[100];
+		char nameBuf[FILE_NAME_SIZE];
 
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
-		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
 		file_size = atol(buf);
@@ -287,6 +300,7 @@ void SocketServer::UDPBroadServerStart()
 		int i = 0;
 		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
 		{
+			m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
 			{
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
@@ -300,6 +314,7 @@ void SocketServer::UDPBroadServerStart()
 		}
 		fclose(m_fp);
 		delete[] path;
+		m_logMessage.AddString(L"Download complete.");
 	}
 }
 
@@ -350,11 +365,12 @@ void SocketServer::UDPMultiServerStart()
 		int len = sizeof(server);
 		char* buf = new char[SIZE];
 		char* path = new char[PATH_SIZE];
-		char nameBuf[100];
+		char nameBuf[FILE_NAME_SIZE];
 
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
-		fileNameSize = recvfrom(m_socket, nameBuf, 20, 0, (SOCKADDR*)&server, &len);
+		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
 		file_size = atol(buf);
@@ -374,6 +390,7 @@ void SocketServer::UDPMultiServerStart()
 		int i = 0;
 		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
 		{
+			m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
 			{
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
@@ -387,6 +404,7 @@ void SocketServer::UDPMultiServerStart()
 		}
 		fclose(m_fp);
 		delete[] path;
+		m_logMessage.AddString(L"Downloading complete.");
 	}
 }
 

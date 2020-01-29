@@ -53,7 +53,7 @@ END_MESSAGE_MAP()
 // CFilePasserServerDlg dialog
 
 CFilePasserServerDlg::CFilePasserServerDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent), m_socketServer(new SocketServer) , m_netType(0)
+	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent), m_socketServer(new SocketServer(logMessage, fileProgress)) , m_netType(0)
 	, m_combo_protocol(nullptr)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -62,6 +62,8 @@ CFilePasserServerDlg::CFilePasserServerDlg(CWnd* pParent /*=nullptr*/)
 void CFilePasserServerDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_SERVER__LOGLIST, logMessage);
+	DDX_Control(pDX, IDC_DOWNLOAD__PROGRESS, fileProgress);
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserServerDlg, CDialogEx)
@@ -69,7 +71,7 @@ BEGIN_MESSAGE_MAP(CFilePasserServerDlg, CDialogEx)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_WM_GETMINMAXINFO()
-	ON_LBN_SELCHANGE(IDC_SERVER__LOGLIST, &CFilePasserServerDlg::OnLbnSelchangeServer)
+//	ON_LBN_SELCHANGE(IDC_SERVER__LOGLIST, &CFilePasserServerDlg::OnLbnSelchangeServer)
 	ON_NOTIFY(NM_CUSTOMDRAW, IDC_DOWNLOAD__PROGRESS, &CFilePasserServerDlg::OnNMCustomdrawDownload)
 	ON_BN_CLICKED(IDC_CONNECT_BUTTON, &CFilePasserServerDlg::OnBnClickedConnectButton)
 	ON_BN_CLICKED(IDC_RADIO_SOCKET, &CFilePasserServerDlg::OnBnClickedRadioSocket)
@@ -79,6 +81,7 @@ BEGIN_MESSAGE_MAP(CFilePasserServerDlg, CDialogEx)
 	ON_CBN_SELCHANGE(IDC_COMBO_BAUDRATE, &CFilePasserServerDlg::OnCbnSelchangeComboBaudrate)
 	ON_BN_CLICKED(IDC_BUTTON_OPEN, &CFilePasserServerDlg::OnBnClickedButtonOpen)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CFilePasserServerDlg::OnBnClickedButtonClose)
+	ON_LBN_SELCANCEL(IDC_SERVER__LOGLIST, &CFilePasserServerDlg::OnSelcancelServerLoglist)
 END_MESSAGE_MAP()
 
 
@@ -122,6 +125,10 @@ BOOL CFilePasserServerDlg::OnInitDialog()
 	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
 	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
 	GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(FALSE);
+
+	LoadListBox();
+	fileProgress.SetRange(0, 100);
+	fileProgress.SetPos(0);
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -191,67 +198,67 @@ std::thread threadObj;
 // Start 버튼 클릭 시 소켓 open
 void CFilePasserServerDlg::OnBnClickedConnectButton()
 {
-	//future<void> thread;
-	
-	SocketServer server;
 	if (NetType::TYPE_TCP == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		//thread = async([&]() {m_socketServer->TCPServerStart(); });
-		m_socketServer->TCPServerStart();
+		threadObj = std::thread([&]() { m_socketServer->TCPServerStart(); });
+		fileProgress.SetPos(50);
+		logMessage.AddString(L"TCP Server Open");
 
-//		threadObj = std::thread([&]() { m_socketServer->TCPServerStart(); });
-		//threadObj.detach();
-		/*if (threadObj.joinable())
-			threadObj.join();*/
-		m_netType = 0;
+		m_netType = -1;
 	}
 	else if (NetType::TYPE_UDP_UNI == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_socketServer->UDPServerStart();
+		threadObj = std::thread([&]() { m_socketServer->UDPServerStart(); });
+		logMessage.AddString(L"UDP Unicast Server Open");
 
-//		threadObj = std::thread([&]() { m_socketServer->UDPServerStart(); });
-
-		m_netType = 0;
+		m_netType = -1;
 	}
 	else if (NetType::TYPE_UDP_BROAD == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_socketServer->UDPBroadServerStart();
+		threadObj = std::thread([&]() { m_socketServer->UDPBroadServerStart(); });
+		logMessage.AddString(L"UDP Broadcast Server Open");
 
-		m_netType = 0;
+		m_netType = -1;
 	}
 	else if (NetType::TYPE_UDP_MULTI == m_netType)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_socketServer->UDPMultiServerStart();
+		threadObj = std::thread([&]() { m_socketServer->UDPMultiServerStart(); });
+		logMessage.AddString(L"UDP Multicast Server Open");
 
-		m_netType = 0;
+		m_netType = -1;
+	}
+	else if (NetType::TYPE_NONE == m_netType)
+	{
+		AfxMessageBox(L"Please select NetType to open server");
 	}
 	else
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Start");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(true);
-		
+
 		m_socketServer->~SocketServer();
 		if (threadObj.joinable())
 			threadObj.join();
-		m_socketServer = new SocketServer;
+		m_socketServer = new SocketServer(logMessage, fileProgress);
+		m_combo_protocol->SetCurSel(0);
+		m_netType = TYPE_NONE;
+		logMessage.AddString(L"Server Close Connection");
 	}
 }
 
-
-// 클라이언트-서버 로그 출력 List
-void CFilePasserServerDlg::OnLbnSelchangeServer()
+void CFilePasserServerDlg::LoadListBox()
 {
 
 }
@@ -308,6 +315,11 @@ void CFilePasserServerDlg::OnBnClickedButtonOpen()
 }
 
 void CFilePasserServerDlg::OnBnClickedButtonClose()
+{
+	// TODO: Add your control notification handler code here
+}
+
+void CFilePasserServerDlg::OnSelcancelServerLoglist()
 {
 	// TODO: Add your control notification handler code here
 }

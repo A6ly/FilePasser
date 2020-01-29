@@ -1,11 +1,15 @@
 #pragma once
 #include "pch.h"
+#include "FilePasserServer.h"
+#include "FilePasserServerDlg.h"
 using namespace std;
+
+class CFilePasserServerDlg;
 
 class SocketServer
 {
 public:
-	SocketServer();
+	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress);
 
 	void TCPServerStart();
 
@@ -17,14 +21,14 @@ public:
 
 	void initWinsock();
 
-	void getLogMessage();
-
 	virtual ~SocketServer();
 
 protected:
 
 private:
 	CString m_eStr;
+	CListBox& m_logMessage;
+	CProgressCtrl& m_fileProgress;
 	SOCKET m_socket;
 	SOCKET m_accept;
 	FILE *m_fp;
