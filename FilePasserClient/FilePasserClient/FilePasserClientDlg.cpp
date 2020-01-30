@@ -15,7 +15,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #define TTL 64
-#define BUF_SIZE 1048576
+#define BUF_SIZE 104857600
 #define PROGRESSVALUE(a, b) (int((double)(a * 100) / double) b)
 #endif
 
@@ -60,7 +60,7 @@ END_MESSAGE_MAP()
 
 
 CFilePasserClientDlg::CFilePasserClientDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_FILEPASSERCLIENT_DIALOG, pParent)
+	: CDialogEx(IDD_FILEPASSERCLIENT_DIALOG, pParent), m_SocketClient(new SocketClient(logMessage))
 {
 	
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -73,6 +73,7 @@ void CFilePasserClientDlg::DoDataExchange(CDataExchange* pDX)
 
 	DDX_Control(pDX, IDC_PROTOCOL_COMBO, m_comboProtocolList);
 	DDX_Control(pDX, IDC_PROGRESS, m_progress);
+	DDX_Control(pDX, IDC_LOG_LIST, logMessage);
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
@@ -86,6 +87,7 @@ BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_FILESEND, &CFilePasserClientDlg::OnBnClickedButtonFilesend)
 	ON_BN_CLICKED(IDC_BUTTON_CONNECT, &CFilePasserClientDlg::OnBnClickedButtonOk)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE, &CFilePasserClientDlg::OnBnClickedButtonClose)
+	ON_LBN_SELCANCEL(IDC_LOG_LIST, &CFilePasserClientDlg::OnLbnSelcancelLogList)
 END_MESSAGE_MAP()
 
 
@@ -220,9 +222,6 @@ void CFilePasserClientDlg::OnBnClickedLog()
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 }
 
-
-
-
 void CFilePasserClientDlg::OnBnClickedButtonOk() {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	int index = m_comboProtocolList.GetCurSel();
@@ -234,31 +233,38 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 	strPort = GetDlgItemInt(IDC_PORT_EDIT);
 	
 	if (index == 1) {
-		m_SocketClient.SetWnd(this->m_hWnd);   // Sendmessage 활용을 위한 메인의 핸들을 받는 함수
-		m_SocketClient.Create();
-		if (m_SocketClient.Connect(strIp, strPort) == FALSE) {
-			AfxMessageBox(_T("ERROR : Failed to connect Server"), MB_OK | MB_ICONERROR);
-			PostQuitMessage(0);   // 프로그램 종료
-			return;
+		m_SocketClient->SetWnd(this->m_hWnd);   // Sendmessage 활용을 위한 메인의 핸들을 받는 함수
+		m_SocketClient->Create();
+		if (m_SocketClient->Connect(strIp, strPort) == FALSE) {
+			if (IDOK == AfxMessageBox(_T("※ERROR : Failed to connect Server"), MB_OK | MB_ICONERROR)) {
+				m_SocketClient->Close();
+				logMessage.AddString(L"※ERROR : Failed to connect TCP Socket");
+				logMessage.AddString(L" ");
+			}
 		}
 		else {
 			AfxMessageBox(_T("Successfully connected to Server"), MB_OK | MB_ICONINFORMATION);
+			logMessage.AddString(L"TCP Socket Create & Connect !");
+			logMessage.AddString(L" ");
 		}
 	}
 
 	else if (index == 2) {
 		char broadcast = '1';
 
-		m_SocketClient.SetWnd(this->m_hWnd);
-		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
-			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+		m_SocketClient->SetWnd(this->m_hWnd);
+		if (m_SocketClient->Create(AF_INET, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			logMessage.AddString(L"※ERROR : Can't create  UDP Broadcast Socket");
 			PostQuitMessage(0);
 			return;
 		}
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+			logMessage.AddString(L"UDP Broadcast Socket Create !");
+			logMessage.AddString(L" ");
 		}
-		m_SocketClient.SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
+		m_SocketClient->SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
 		memset(&bcast_group, 0, sizeof(bcast_group));
 		bcast_group.sin_family = AF_INET;
 		bcast_group.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
@@ -268,16 +274,19 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 	else if (index == 3) {
 		int multi_TTL = TTL;
 
-		m_SocketClient.SetWnd(this->m_hWnd);
-		if (m_SocketClient.Create(AF_INET, SOCK_DGRAM, 0) < 0) {
-			AfxMessageBox(_T("ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+		m_SocketClient->SetWnd(this->m_hWnd);
+		if (m_SocketClient->Create(AF_INET, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			logMessage.AddString(L"※ERROR : Can't create  UDP Multicast Socket");
 			PostQuitMessage(0);
 			return;
 		}
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+			logMessage.AddString(L"UDP Multicast Socket Create !");
+			logMessage.AddString(L" ");
 		}
-		m_SocketClient.SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
+		m_SocketClient->SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
 		memset(&mcast_group, 0, sizeof(mcast_group));
 		mcast_group.sin_family = AF_INET;
 		mcast_group.sin_addr.S_un.S_addr = inet_addr("235.0.0.27");
@@ -285,14 +294,17 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 	}
 
 	else if (index == 4) {
-		m_SocketClient.SetWnd(this->m_hWnd);
-		if (m_SocketClient.Create(strPort, SOCK_DGRAM, 0) < 0) {
-			AfxMessageBox(_T("Can't create send Socket"), MB_OK | MB_ICONERROR);
+		m_SocketClient->SetWnd(this->m_hWnd);
+		if (m_SocketClient->Create(strPort, SOCK_DGRAM, 0) < 0) {
+			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
+			logMessage.AddString(L"※ERROR : Can't create  UDP Unicast Socket");
 			PostQuitMessage(0);
 			return;
 		}
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
+			logMessage.AddString(L"UDP Unicast Socket Create !");
+			logMessage.AddString(L" ");
 		}
 	}
 }
@@ -309,6 +321,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 	int NameLength_send;
 	int fileSize;
+	int* fSize;
 
 	CStringA strFileName_send;
 	CString strFilePath_send;
@@ -328,13 +341,16 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			char* strName_send = new char[NameLength_send];
 			strFileName_send = sendFile_send.GetFileName();
 			strName_send = strFileName_send.GetBuffer(NameLength_send);
-			m_SocketClient.Send(strName_send, NameLength_send);
+			m_SocketClient->Send(strName_send, NameLength_send);
+			logMessage.AddString(L"File Name send");
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
 			m_progress.SetRange(0, dwRead_send);
 
-			m_SocketClient.Send(data_send, dwRead_send);
+			m_SocketClient->Send(data_send, dwRead_send);
+			logMessage.AddString(L"File Data send Completion !");
+			logMessage.AddString(L"­──────────────────");
 			
 			m_progress.SetPos(dwRead_send);
 			if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
@@ -360,12 +376,17 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			char* strName_send = new char[NameLength_send];
 			strFileName_send = sendFile_send.GetFileName();
 			strName_send = strFileName_send.GetBuffer(NameLength_send);
-			m_SocketClient.SendTo(strName_send, NameLength_send, (struct sockaddr *)&bcast_group, sizeof(bcast_group));
+			m_SocketClient->SendTo(strName_send, NameLength_send, (struct sockaddr *)&bcast_group, sizeof(bcast_group));
+			logMessage.AddString(L"File Name send");
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 			
 			fileSize = dwRead_send;
 			m_progress.SetRange(0, fileSize);
+
+			fSize = &fileSize;
+			m_SocketClient->SendTo(fSize, 4, (struct sockaddr*) & bcast_group, sizeof(bcast_group));
+			logMessage.AddString(L"File Size send");
 
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
@@ -374,12 +395,13 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			int sendsize = 1500;
 			int progressSize = 0;
 
+			logMessage.AddString(L"File Data sending ...");
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
 					sendsize = dwRead_send;
 
 				memcpy(buf, &data_send[size], sendsize);
-				sendsize = m_SocketClient.SendTo(buf, sendsize, (struct sockaddr*) & bcast_group, sizeof(bcast_group));
+				sendsize = m_SocketClient->SendTo(buf, sendsize, (struct sockaddr*) & bcast_group, sizeof(bcast_group));
 
 				if (sendsize == 0)
 					continue;
@@ -395,6 +417,8 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 					m_progress.SetPos(0);
 				}
 			}
+			logMessage.AddString(L"File Data send Completion !");
+			logMessage.AddString(L"­──────────────────");
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -416,12 +440,17 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			char* strName_send = new char[NameLength_send];
 			strFileName_send = sendFile_send.GetFileName();
 			strName_send = strFileName_send.GetBuffer(NameLength_send);
-			m_SocketClient.SendTo(strName_send, NameLength_send, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
+			m_SocketClient->SendTo(strName_send, NameLength_send, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
+			logMessage.AddString(L"File Name send");
 			
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
 			fileSize = dwRead_send;
 			m_progress.SetRange(0, fileSize);
+
+			fSize = &fileSize;
+			m_SocketClient->SendTo(fSize, 4, (struct sockaddr*)& mcast_group, sizeof(mcast_group));
+			logMessage.AddString(L"File Size send");
 
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
@@ -430,12 +459,13 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			int sendsize = 1500;
 			int progressSize = 0;
 
+			logMessage.AddString(L"File Data sending ...");
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
 					sendsize = dwRead_send;
 
 				memcpy(buf, &data_send[size], sendsize);
-				sendsize = m_SocketClient.SendTo(buf, sendsize, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
+				sendsize = m_SocketClient->SendTo(buf, sendsize, (struct sockaddr*) & mcast_group, sizeof(mcast_group));
 
 				if (sendsize == 0)
 					continue;
@@ -451,7 +481,9 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 					m_progress.SetPos(0);
 				}
 			}
-
+			logMessage.AddString(L"File Data send Completion !");
+			logMessage.AddString(L"­──────────────────");
+			
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
 
@@ -472,22 +504,17 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			char* strName_send = new char[NameLength_send];
 			strFileName_send = sendFile_send.GetFileName();
 			strName_send = strFileName_send.GetBuffer(NameLength_send);
-			m_SocketClient.SendTo(strName_send, NameLength_send, strPort, strIp);
+			m_SocketClient->SendTo(strName_send, NameLength_send, strPort, strIp);
+			logMessage.AddString(L"File Name send");
 
 			dwRead_send = sendFile_send.Read(data_send, BUF_SIZE);
 
 			fileSize = dwRead_send;
 			m_progress.SetRange(0, fileSize);
 
-
-			//char fSize[256];
-			//sprintf(fSize, "%d", fileSize);
-			//m_SocketClient.SendTo(fSize, strlen(fSize), strPort, strIp);
-
-			int* fSize;
-			htonl(fileSize);
 			fSize = &fileSize;
-			m_SocketClient.SendTo(fSize, 4, strPort, strIp);
+			m_SocketClient->SendTo(fSize, 4, strPort, strIp);
+			logMessage.AddString(L"File Size send");
 
 			char buf[1500];
 			memset(buf, 0, sizeof(buf));
@@ -496,12 +523,13 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			int sendsize = 1500;
 			int progressSize = 0;
 
+			logMessage.AddString(L"File Data sending ...");
 			while (sendsize > 0) {
 				if (dwRead_send < sendsize)
 					sendsize = dwRead_send;
 
 				memcpy(buf, &data_send[size], sendsize);
-				sendsize = m_SocketClient.SendTo(buf, sendsize, strPort, strIp);
+				sendsize = m_SocketClient->SendTo(buf, sendsize, strPort, strIp);
 
 				if (sendsize == 0)
 					continue;
@@ -517,6 +545,8 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 					m_progress.SetPos(0);
 				}
 			}
+			logMessage.AddString(L"File Data send Completion !");
+			logMessage.AddString(L"­──────────────────");
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -533,6 +563,15 @@ void CFilePasserClientDlg::OnBnClickedButtonClose()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 
-	m_SocketClient.Close();
+	m_SocketClient->Close();
 	AfxMessageBox(_T("Successful Socket close"), MB_OK | MB_ICONINFORMATION);
+	logMessage.AddString(L"Socket Close !!!");
+	logMessage.AddString(L" ");
+
+}
+
+
+void CFilePasserClientDlg::OnLbnSelcancelLogList()
+{
+	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 }

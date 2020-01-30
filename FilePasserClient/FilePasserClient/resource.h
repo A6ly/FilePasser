@@ -21,7 +21,6 @@
 #define IDC_BUTTON_FILESEND             1014
 #define IDC_BUTTON_CLOSE                1016
 #define IDC_RADIO_PROTOCOL              1017
-#define IDC_RADIO2                      1018
 #define IDC_RADIO_SERIAL                1018
 
 // Next default values for new objects
