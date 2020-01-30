@@ -1,4 +1,0 @@
-﻿  SocketServer.cpp
-  The contents of <filesystem> are only available with C++17 or later.
-D:\C++\FilePasserServer\SocketServer.cpp(161,29): warning C4101: 'client': unreferenced local variable
-  FilePasserServer.vcxproj -> D:\C++\FilePasserServer\x64\Debug\FilePasserServer.exe
