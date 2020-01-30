@@ -126,9 +126,9 @@ BOOL CFilePasserServerDlg::OnInitDialog()
 	GetDlgItem(IDC_CONNECT_BUTTON)->EnableWindow(FALSE);
 	GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(FALSE);
 
-	LoadListBox();
+	/*LoadListBox();
 	fileProgress.SetRange(0, 100);
-	fileProgress.SetPos(0);
+	fileProgress.SetPos(0);*/
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -204,7 +204,6 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
 		threadObj = std::thread([&]() { m_socketServer->TCPServerStart(); });
-		fileProgress.SetPos(50);
 		logMessage.AddString(L"TCP Server Open");
 
 		m_netType = -1;
