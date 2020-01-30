@@ -7,12 +7,15 @@
 class SocketClient : public CSocket
 {
 public:
-	SocketClient();
+	SocketClient(CListBox& logMessage);
 	virtual ~SocketClient();
 	void SetWnd(HWND hWnd);
 	HWND m_hWnd;
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnClose(int nErrorCode);
+
+private:
+	CListBox& m_logMessage;
 };
 
 

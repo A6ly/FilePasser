@@ -4,18 +4,18 @@
 #include "pch.h"
 #include "FilePasserClient.h"
 #include "SocketClient.h"
+#include "FilePasserClientDlg.h"
 
 
 // SocketClient
 
-SocketClient::SocketClient()
+SocketClient::SocketClient(CListBox& logMessage) : m_logMessage(logMessage)
 {
 }
 
 SocketClient::~SocketClient()
 {
 }
-
 
 // SocketClient 멤버 함수
 
@@ -41,5 +41,7 @@ void SocketClient::OnClose(int nErrorCode) {
 
 	CSocket::OnClose(nErrorCode);
 
-	AfxMessageBox(_T("Disconnected from Server!"), MB_OK | MB_ICONWARNING);
+	if (AfxMessageBox(_T("Disconnected from Server!"), MB_OK | MB_ICONWARNING) == IDOK) {
+		m_logMessage.AddString(L"※WARRING : Disconnected from TCP Server");
+	}
 }
