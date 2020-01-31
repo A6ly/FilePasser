@@ -32,20 +32,9 @@ SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress)
 	}
 }
 
-/*void SocketServer::initWinsock()
-{
-	// Winsock 초기화 함수
-	WSADATA wsa;
-	int m_error = WSAStartup(MAKEWORD(2, 2), &wsa);						
-	if (m_error != 0)
-	{
-		m_error = WSAGetLastError();
-		cout << "WSA initialization Error Code: " << m_error << endl;
-		return;
-	}
-}*/
 
-// Start 버튼 클릭 시 소켓 생성
+//////////////////////////////////////////
+// TCP 서버 구동을 위한 메소드
 void SocketServer::TCPServerStart()
 {
 	// TCP소켓 생성 및 소켓 예외처리
@@ -85,21 +74,19 @@ void SocketServer::TCPServerStart()
 	int clientLen = sizeof(struct sockaddr_in);
 
 	// 소켓 Accept
-	m_logMessage.AddString(L"Wating accept to client socket...");
-	m_fileProgress.SetPos(0);
+	m_logMessage.AddString(L"Waiting accept to client socket...");
+	m_fileProgress.SetRange(0, 100);
 	m_accept = accept(m_socket, (sockaddr*)&client, &clientLen);
 	if (m_accept == INVALID_SOCKET)
 	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Accept failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+		/*m_error = WSAGetLastError();
+		m_eStr.Format(_T("Accept failed Error Code: %d"), m_error);*/
+		AfxMessageBox(L"Accept close");
 		return;
 	}
 	m_logMessage.AddString(L"Successful client connecting");
 
 	/* 파일을 담을 바이트 크기와 버퍼 크기 */
-	
-	
 	while (1)
 	{
 		int bytes = 0, totalBytes = 0, bufferNum = 0, totalBufferNum = 0;
@@ -157,6 +144,9 @@ void SocketServer::TCPServerStart()
 	}
 }
 
+
+//////////////////////////////////////////
+// UDP Unicast 서버 구동을 위한 메소드
 void SocketServer::UDPServerStart()
 {
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -199,7 +189,7 @@ void SocketServer::UDPServerStart()
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
 		memset(fileSizeBuf, 0, 4);
-		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
 
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		if (fileNameSize == SOCKET_ERROR)
@@ -271,6 +261,9 @@ void SocketServer::UDPServerStart()
 	}
 }
 
+
+//////////////////////////////////////////
+// UDP Broadcast 서버 구동을 위한 메소드
 void SocketServer::UDPBroadServerStart()
 {
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -322,7 +315,7 @@ void SocketServer::UDPBroadServerStart()
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
 		memset(fileSizeBuf, 0, 4);
-		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
 
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		if (fileNameSize == SOCKET_ERROR)
@@ -386,12 +379,16 @@ void SocketServer::UDPBroadServerStart()
 		m_fileProgress.SetPos(pos);
 		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
 			m_fileProgress.SetPos(0);
+
 		fclose(m_fp);
 		delete[] path;
 		m_logMessage.AddString(L"Download complete.");
 	}
 }
 
+
+//////////////////////////////////////////
+// UDP Multicast 서버 구동을 위한 메소드
 void SocketServer::UDPMultiServerStart()
 {
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
@@ -445,7 +442,7 @@ void SocketServer::UDPMultiServerStart()
 
 		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
 		memset(buf, 0, SIZE);
-		m_logMessage.AddString(L"Wating client UDPSocket for download file.");
+		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
 
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		if (fileNameSize == SOCKET_ERROR)

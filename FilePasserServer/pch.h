@@ -6,6 +6,9 @@
 #define _WINSOCK_DEPRECATED_NO_WARNINGS
 #ifndef PCH_H
 #define PCH_H
+#define BUF_SIZE 1000000
+#define PATH_SIZE 100
+#define FILE_NAME_SIZE 50
 
 // add headers that you want to pre-compile here
 #include "framework.h"
