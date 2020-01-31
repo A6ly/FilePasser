@@ -16,7 +16,6 @@
 #define new DEBUG_NEW
 #define TTL 64
 #define BUF_SIZE 104857600
-#define PROGRESSVALUE(a, b) (int((double)(a * 100) / double) b)
 #endif
 
 struct sockaddr_in bcast_group;
@@ -137,16 +136,13 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 	SetIcon(m_hIcon, FALSE);		// 작은 아이콘을 설정합니다.
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
+	SetBackgroundColor(RGB(255, 255, 255));
 
 	m_comboBaudrateList.AddString(_T("1200"));
 	m_comboBaudrateList.AddString(_T("2400"));
 	m_comboBaudrateList.AddString(_T("4800"));
 	m_comboBaudrateList.AddString(_T("9600"));
 	m_comboBaudrateList.AddString(_T("14400"));
-	m_comboBaudrateList.AddString(_T("19200"));
-	m_comboBaudrateList.AddString(_T("38400"));
-	m_comboBaudrateList.AddString(_T("57600"));
-	m_comboBaudrateList.AddString(_T("115200"));
 
 	m_comboDataBitsList.AddString(_T("5"));
 	m_comboDataBitsList.AddString(_T("6"));
@@ -430,7 +426,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOpenPort()
 	GetDlgItemText(IDC_PARITY_COMBO, strParity);
 
 	idComDev = CreateFile(strCom, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OVERLAPPED, NULL);
-	SetupComm(idComDev, 104857600, 104857600);
+	SetupComm(idComDev, 100000, 100000);
 	PurgeComm(idComDev, PURGE_TXABORT | PURGE_RXABORT | PURGE_TXCLEAR | PURGE_RXCLEAR);
 
 	GetCommState(idComDev, &dcb);
@@ -758,6 +754,8 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			m_progress.SetRange(0, dwRead_send);
 
 			WriteFile(idComDev, data_send, dwRead_send, NULL, &osWrite);
+
+			PurgeComm(idComDev, PURGE_TXCLEAR | PURGE_RXCLEAR);
 
 			m_progress.SetPos(dwRead_send);
 			if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
