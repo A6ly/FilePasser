@@ -27,6 +27,7 @@
 #define IDC_BUTTON3                     1015
 #define IDC_BUTTON_CANCEL               1015
 #define IDC_BUTTON_CLOSE                1015
+#define IDC_BUTTON_OPEN2                1015
 #define IDC_COMBO_STOPBIT               1016
 #define IDC_EDIT_COMPORT                1017
 #define IDC_COMBO_PARITYBIT             1018

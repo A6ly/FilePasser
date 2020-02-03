@@ -13,6 +13,7 @@ public:
 	virtual ~SerialPort(void);
 
 private:
+	FILE* m_fp;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;
 	HANDLE m_hComport;

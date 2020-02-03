@@ -7,10 +7,10 @@
 #include <filesystem>
 #include <chrono>
 
-#define PORT 20200
-#define MAX_CONNECTION 5
 #define ADDR_IP "192.168.0.27"
 #define ADDR_GROUP "235.0.0.27"
+#define PORT 20200
+#define MAX_CONNECTION 5
 #define BUF_SIZE 1000000
 #define SIZE 5000
 #define FILE_NAME_SIZE 50
@@ -42,8 +42,10 @@ void SocketServer::TCPServerStart()
 	if (m_socket == INVALID_SOCKET)
 	{
 		m_error = WSAGetLastError();
+	#ifdef DEBUG
 		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Create Socket Error"));
 		return;
 	}
 
@@ -56,18 +58,22 @@ void SocketServer::TCPServerStart()
 	// 소켓 바인딩
 	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)	
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Bind failed Error"));
 		return;
 	}
 
 	// 소켓 리슨
 	if (listen(m_socket, SOMAXCONN_HINT(MAX_CONNECTION) != 0))
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Listen failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Listen failed Error"));
 		return;
 	}
 
@@ -79,15 +85,17 @@ void SocketServer::TCPServerStart()
 	m_accept = accept(m_socket, (sockaddr*)&client, &clientLen);
 	if (m_accept == INVALID_SOCKET)
 	{
-		/*m_error = WSAGetLastError();
-		m_eStr.Format(_T("Accept failed Error Code: %d"), m_error);*/
+	#ifdef DEBUG
+		m_error = WSAGetLastError();
+		m_eStr.Format(_T("Accept failed Error Code: %d"), m_error);
+	#endif
 		AfxMessageBox(L"Accept close");
 		return;
 	}
 	m_logMessage.AddString(L"Successful client connecting");
 
 	/* 파일을 담을 바이트 크기와 버퍼 크기 */
-	while (1)
+	while (INFINITE_LOOP)
 	{
 		int bytes = 0, totalBytes = 0, bufferNum = 0, totalBufferNum = 0;
 		int fileNameSize = 0, file_size = 0, pos = 0;
@@ -111,8 +119,10 @@ void SocketServer::TCPServerStart()
 		errno_t ferr = fopen_s(&m_fp, path, "wb");
 		if (ferr != 0)
 		{
-			//m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(L"Client disconnect");
+		#ifdef DEBUG
+			m_eStr.Format(_T("File open error Code: %d"), ferr);
+		#endif	
+			AfxMessageBox(_T("Client disconnect"));
 			return;
 		}
 
@@ -127,17 +137,24 @@ void SocketServer::TCPServerStart()
 
 			else if (bytes == SOCKET_ERROR)
 			{
+			#ifdef DEBUG
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
+			#endif
+				AfxMessageBox(_T("Client disconnect"));
 				SocketServer::~SocketServer();
 				return;
 			}
 		}
 		// 파일 저장 버퍼와 경로 할당 해제
 		m_fileProgress.SetPos(100);
-		if ((AfxMessageBox(_T("Download complete"), MB_OK) == IDOK))
+		if ((AfxMessageBox(_T("Download complete"), MB_OK) == IDOK)) 
+		{
 			m_fileProgress.SetPos(0);
-
+		}
+		else
+		{
+		}
+			
 		fclose(m_fp);
 		delete[] path;
 		m_logMessage.AddString(L"Download complete.");
@@ -154,9 +171,11 @@ void SocketServer::UDPServerStart()
 	// 소켓 예외처리
 	if (m_socket == INVALID_SOCKET)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Create socket failed"));
 		return;
 	}
 
@@ -167,14 +186,15 @@ void SocketServer::UDPServerStart()
 
 	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Bind failed Error"));
 		return;
 	}
 
-
-	while (1)
+	while (INFINITE_LOOP)
 	{
 		int bytes = 0;
 		int totalBytes = 0;
@@ -192,23 +212,24 @@ void SocketServer::UDPServerStart()
 		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
 
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
-		if (fileNameSize == SOCKET_ERROR)
+		if (fileNameSize == INVALID_SOCKET)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif
+			AfxMessageBox(_T("File read error"));
 			return;
 		}
-		else if (m_socket == INVALID_SOCKET)
-		{
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
+		else{ }
+
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
 		fileSize = recvfrom(m_socket, fileSizeBuf, 4, 0, (SOCKADDR*)&server, &len);
 		if (fileSize == SOCKET_ERROR)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif	
 			AfxMessageBox(L"Disconnected with Client");
 			return;
 		}
@@ -225,8 +246,10 @@ void SocketServer::UDPServerStart()
 		errno_t ferr = fopen_s(&m_fp, path, "wb");
 		if (ferr != 0)
 		{
+		#ifdef DEBUG
 			m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(m_eStr);
+		#endif	
+			AfxMessageBox(_T("File open error"));
 			return;
 		}
  
@@ -235,8 +258,10 @@ void SocketServer::UDPServerStart()
 			//m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
 			{
+			#ifdef DEBUG
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
+			#endif
+				AfxMessageBox(_T("File read error"));
 				return;
 			}
 			else if (m_socket == INVALID_SOCKET)
@@ -269,9 +294,11 @@ void SocketServer::UDPBroadServerStart()
 	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 	if (m_socket == INVALID_SOCKET)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Create socket failed"));
 		return;
 	}
 
@@ -279,9 +306,11 @@ void SocketServer::UDPBroadServerStart()
 
 	if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Setsockopt failed Error"));
 		return;
 	}
 
@@ -292,13 +321,15 @@ void SocketServer::UDPBroadServerStart()
 
 	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Bind failed error"));
 		return;
 	}
 
-	while (1)
+	while (INFINITE_LOOP)
 	{
 		int bytes = 0;
 		int totalBytes = 0;
@@ -320,7 +351,9 @@ void SocketServer::UDPBroadServerStart()
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		if (fileNameSize == SOCKET_ERROR)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif
 			AfxMessageBox(L"Disconnected with Client");
 			return;
 		}
@@ -334,7 +367,9 @@ void SocketServer::UDPBroadServerStart()
 		fileSize = recvfrom(m_socket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&server, &len);
 		if (fileSize == SOCKET_ERROR)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif	
 			AfxMessageBox(L"Disconnected with Client");
 			return;
 		}
@@ -351,8 +386,10 @@ void SocketServer::UDPBroadServerStart()
 		errno_t ferr = fopen_s(&m_fp, path, "wb");
 		if (ferr != 0)
 		{
+		#ifdef DEBUG
 			m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(m_eStr);
+		#endif	
+			AfxMessageBox(_T("File open error"));
 			return;
 		}
 
@@ -361,8 +398,10 @@ void SocketServer::UDPBroadServerStart()
 			//m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
 			{
+			#ifdef DEBUG
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
+			#endif	
+				AfxMessageBox(_T("File read error"));
 				return;
 			}
 			else if (m_socket == INVALID_SOCKET)
@@ -395,9 +434,11 @@ void SocketServer::UDPMultiServerStart()
 
 	if (m_socket == INVALID_SOCKET)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif	
+		AfxMessageBox(_T("Create socket failed"));
 		return;
 	}
 
@@ -408,9 +449,11 @@ void SocketServer::UDPMultiServerStart()
 
 	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Bind failed Error"));
 		return;
 	}
 
@@ -420,13 +463,15 @@ void SocketServer::UDPMultiServerStart()
 
 	if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0)
 	{
+	#ifdef DEBUG
 		m_error = WSAGetLastError();
 		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
+	#endif
+		AfxMessageBox(_T("Setsockopt failed"));
 		return;
 	}
 
-	while (1)
+	while (INFINITE_LOOP)
 	{
 		int bytes = 0;
 		int totalBytes = 0;
@@ -447,7 +492,9 @@ void SocketServer::UDPMultiServerStart()
 		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
 		if (fileNameSize == SOCKET_ERROR)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif	
 			AfxMessageBox(L"Disconnected with Client");
 			return;
 		}
@@ -461,8 +508,10 @@ void SocketServer::UDPMultiServerStart()
 		fileSize = recvfrom(m_socket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&server, &len);
 		if (fileSize == SOCKET_ERROR)
 		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
+		#ifdef DEBUG
+			m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+		#endif
+			AfxMessageBox(_T("File read error"));
 			return;
 		}
 		else if (m_socket == INVALID_SOCKET)
@@ -478,8 +527,10 @@ void SocketServer::UDPMultiServerStart()
 		errno_t ferr = fopen_s(&m_fp, path, "wb");
 		if (ferr != 0)
 		{
+		#ifdef DEBUG
 			m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(m_eStr);
+		#endif
+			AfxMessageBox(_T("File open error"));
 			return;
 		}
 
@@ -488,8 +539,10 @@ void SocketServer::UDPMultiServerStart()
 			//m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
 			{
+			#ifdef DEBUG
 				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
+		#endif	
+				AfxMessageBox(L"Disconnected with Client");
 				return;
 			}
 			else if (m_socket == INVALID_SOCKET)

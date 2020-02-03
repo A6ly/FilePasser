@@ -59,4 +59,5 @@ public:
 	afx_msg void OnCbnSelchangeComboParitybit();
 	afx_msg void OnCbnSelchangeComboStopbit();
 	afx_msg void OnCbnSelchangeComboDatabit();
+	afx_msg void OnBnClickedButtonClose();
 };
