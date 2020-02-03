@@ -13,6 +13,7 @@ class CFilePasserClientDlg : public CDialogEx
 public:
 	CFilePasserClientDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
 	SocketClient* m_SocketClient;
+	void Save();
 
 // 대화 상자 데이터입니다.
 	enum { IDD = IDD_FILEPASSERCLIENT_DIALOG };
