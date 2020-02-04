@@ -7,18 +7,26 @@
 #include <filesystem>
 #include <chrono>
 
-#define ADDR_IP "192.168.0.27"
+/*#define netconfig->addr_ip "192.168.012.272"
 #define ADDR_GROUP "235.0.0.27"
-#define PORT 20200
+#define netconfig->port 20200*/
 #define MAX_CONNECTION 5
 #define BUF_SIZE 1000000
 #define SIZE 5000
 #define FILE_NAME_SIZE 50
 #define PATH_SIZE 100
 
+typedef struct {
+	char addr_ip[16];
+	char addr_group_ip[16];
+	int  port;
+} network_config;
+
+network_config* netconfig = (network_config*)malloc(sizeof(network_config));
+
 // SocketServer
 SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime) 
-	: m_socket(NULL), m_fp(nullptr), m_error(0), m_accept(NULL)
+	: m_socket(NULL), m_recvfp(nullptr), m_error(0), m_accept(NULL)
 	, m_logMessage(logMessage), m_fileProgress(fileProgress), m_strTime(strTime)
 {
 	// Winsock 초기화 
@@ -30,8 +38,23 @@ SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CS
 		cout << "WSA initialization Error Code: " << m_error << endl;
 		return;
 	}
-}
 
+	char port[7];
+	FILE* config_fp = NULL;
+	errno_t err_f = fopen_s(&config_fp, "network_config.txt", "r");
+	if (err_f != 0)
+	{
+		return;
+	}
+	fgets(netconfig->addr_ip, sizeof(char) * 16, config_fp);
+	netconfig->addr_ip[strlen(netconfig->addr_ip) - 1] = '\0';
+	fgets(netconfig->addr_group_ip, sizeof(char) * 16, config_fp);
+	netconfig->addr_group_ip[strlen(netconfig->addr_group_ip) - 1] = '\0';
+	fgets(port, sizeof(char) * 16, config_fp);
+
+	netconfig->port = atoi(port);
+	fclose(config_fp);
+}
 
 //////////////////////////////////////////
 // TCP 서버 구동을 위한 메소드
@@ -53,8 +76,8 @@ void SocketServer::TCPServerStart()
 	// 소켓 주소 구조체 선언
 	struct sockaddr_in server, client;				
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
+	server.sin_addr.S_un.S_addr = inet_addr(netconfig->addr_ip);
+	server.sin_port = htons(netconfig->port);
 
 	// 소켓 바인딩
 	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)	
@@ -96,7 +119,7 @@ void SocketServer::TCPServerStart()
 		#else
 			AfxMessageBox(L"Accept close");
 		#endif
-			return;
+		return;
 	}
 	m_logMessage.AddString(m_strTime);
 	m_logMessage.AddString(L"Successful client connecting");
@@ -118,7 +141,7 @@ void SocketServer::TCPServerStart()
 		if (fileNameSize == 0)
 		{
 			#ifdef DEBUG
-				m_eStr.Format(_T("File open error Code: %d"), ferr);
+				m_eStr.Format(_T("File open error Code: %d") , GetLastError());
 			#else	
 				AfxMessageBox(_T("Client disconnect"));
 			#endif
@@ -131,7 +154,7 @@ void SocketServer::TCPServerStart()
 		bufferNum = 0;
 
 		// 해당 위치에 파일 개방
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
+		errno_t ferr = fopen_s(&m_recvfp, path, "wb");
 		if (ferr != 0)
 		{
 			#ifdef DEBUG
@@ -154,7 +177,7 @@ void SocketServer::TCPServerStart()
 				m_logMessage.AddString(L"Downloading file....");
 				m_logMessage.AddString(path_t);
 				bufferNum++;
-				fwrite(buf, sizeof(char), bytes, m_fp);
+				fwrite(buf, sizeof(char), bytes, m_recvfp);
 			}
 
 			else if (bytes == SOCKET_ERROR)
@@ -177,7 +200,7 @@ void SocketServer::TCPServerStart()
 		{
 		}
 			
-		fclose(m_fp);
+		fclose(m_recvfp);
 		delete[] path;
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Download complete");
@@ -205,8 +228,8 @@ void SocketServer::UDPServerStart()
 
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
+	server.sin_addr.S_un.S_addr = inet_addr(netconfig->addr_ip);
+	server.sin_port = htons(netconfig->port);
 
 	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
 	{
@@ -275,7 +298,7 @@ void SocketServer::UDPServerStart()
 
 		m_fileProgress.SetRange(0, totalBytes);
 
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
+		errno_t ferr = fopen_s(&m_recvfp, path, "wb");
 		if (ferr != 0)
 		{
 			#ifdef DEBUG
@@ -310,7 +333,7 @@ void SocketServer::UDPServerStart()
 				AfxMessageBox(L"Disconnected with Client");
 				return;
 			}
-			fwrite(buf, sizeof(char), bytes, m_fp);
+			fwrite(buf, sizeof(char), bytes, m_recvfp);
 			totalBytes -= bytes;
 			pos += bytes;
 			if (totalBytes < 0)
@@ -321,7 +344,7 @@ void SocketServer::UDPServerStart()
 		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
 			m_fileProgress.SetPos(0);
 
-		fclose(m_fp);
+		fclose(m_recvfp);
 		delete[] path;
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Download complete");
@@ -362,8 +385,8 @@ void SocketServer::UDPBroadServerStart()
 
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
+	server.sin_addr.S_un.S_addr = inet_addr(netconfig->addr_ip);
+	server.sin_port = htons(netconfig->port);
 
 	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)
 	{
@@ -437,7 +460,7 @@ void SocketServer::UDPBroadServerStart()
 
 		m_fileProgress.SetRange(0, totalBytes);
 
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
+		errno_t ferr = fopen_s(&m_recvfp, path, "wb");
 		if (ferr != 0)
 		{
 			#ifdef DEBUG
@@ -474,7 +497,7 @@ void SocketServer::UDPBroadServerStart()
 			}
 			totalBytes -= bytes;
 			pos += bytes;
-			fwrite(buf, sizeof(char), bytes, m_fp);
+			fwrite(buf, sizeof(char), bytes, m_recvfp);
 			if (totalBytes < 0)
 				break;
 		}
@@ -482,7 +505,7 @@ void SocketServer::UDPBroadServerStart()
 		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
 			m_fileProgress.SetPos(0);
 
-		fclose(m_fp);
+		fclose(m_recvfp);
 		delete[] path;
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Download complete");
@@ -510,8 +533,8 @@ void SocketServer::UDPMultiServerStart()
 
 	struct sockaddr_in server;
 	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
+	server.sin_addr.S_un.S_addr = inet_addr(netconfig->addr_ip);
+	server.sin_port = htons(netconfig->port);
 
 	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
 	{
@@ -526,7 +549,7 @@ void SocketServer::UDPMultiServerStart()
 	}
 
 	struct ip_mreq mreq;
-	mreq.imr_multiaddr.S_un.S_addr = inet_addr(ADDR_GROUP);
+	mreq.imr_multiaddr.S_un.S_addr = inet_addr(netconfig->addr_group_ip);
 	mreq.imr_interface.S_un.S_addr = htonl(INADDR_ANY);
 
 	if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0)
@@ -600,7 +623,7 @@ void SocketServer::UDPMultiServerStart()
 
 		m_fileProgress.SetRange(0, totalBytes);
 
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
+		errno_t ferr = fopen_s(&m_recvfp, path, "wb");
 		if (ferr != 0)
 		{
 			#ifdef DEBUG
@@ -637,14 +660,14 @@ void SocketServer::UDPMultiServerStart()
 			}
 			totalBytes -= bytes;
 			pos += bytes;
-			fwrite(buf, sizeof(char), bytes, m_fp);
+			fwrite(buf, sizeof(char), bytes, m_recvfp);
 			if (totalBytes < 0)
 				break;
 		}
 		m_fileProgress.SetPos(pos);
 		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
 			m_fileProgress.SetPos(0);
-		fclose(m_fp);
+		fclose(m_recvfp);
 		delete[] path;
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Downloading complete");
@@ -653,8 +676,8 @@ void SocketServer::UDPMultiServerStart()
 
 SocketServer::~SocketServer()
 {
-	if (m_fp != nullptr)
-		fclose(m_fp);
+	if (m_recvfp != nullptr)
+		fclose(m_recvfp);
 	closesocket(m_socket);
 	if (m_accept != NULL)
 		closesocket(m_accept);

@@ -19,6 +19,7 @@ private:
 	HANDLE m_hComport;
 	DCB m_dcb;
 	CString& m_strTime;
+	CString m_eStr;
 
 public:
 	BOOL openPort(CString portName);

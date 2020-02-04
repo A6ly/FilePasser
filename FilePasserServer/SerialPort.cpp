@@ -99,7 +99,7 @@ void SerialPort::readFile()
 			if (err != 0)
 			{
 				#ifdef DEBUG
-					m_eStr.Format(_T("File open error Code: %d"), ferr);
+					m_eStr.Format(_T("File open error Code: %d"), GetLastError());
 					AfxMessageBox(m_eStr);
 				#else
 					AfxMessageBox(_T("File open error"));

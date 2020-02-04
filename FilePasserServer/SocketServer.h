@@ -29,7 +29,7 @@ private:
 	CProgressCtrl& m_fileProgress;
 	SOCKET m_socket;
 	SOCKET m_accept;
-	FILE *m_fp;
+	FILE *m_recvfp;
 	int m_error;
 };
 
