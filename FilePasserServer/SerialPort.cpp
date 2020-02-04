@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "SerialPort.h"
 
-SerialPort::SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress)
-	: m_logMessage(logMessage), m_fileProgress(fileProgress), m_fp(nullptr)
+SerialPort::SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime)
+	: m_logMessage(logMessage), m_fileProgress(fileProgress), m_fp(nullptr), m_strTime(strTime)
 {
 	
 }
@@ -86,16 +86,30 @@ void SerialPort::readFile()
 		char path[PATH_SIZE] = "C:/Users/user/Desktop/recv/";
 		
 		readStatus = ReadFile(m_hComport, buf, bytesRead, &bytesRead, &overlapped);
+		m_logMessage.AddString(m_strTime);
+		m_logMessage.AddString(L"Incoming Data...");
 		while (overlappedStatus = GetOverlappedResult(m_hComport, &overlapped, &bytesRead, TRUE))
 		{
 			token = strtok_s(buf, "?", &nextTokens);
 			int i = 0;
-			while (token[i] != '\0')
-			{
-				++i;
-			}
+			while (token[i] != '\0') { ++i; }
 			strncat_s(path, PATH_SIZE, token, i);
+
 			errno_t err = fopen_s(&m_fp, path, "wb");
+			if (err != 0)
+			{
+				#ifdef DEBUG
+					m_eStr.Format(_T("File open error Code: %d"), ferr);
+					AfxMessageBox(m_eStr);
+				#else
+					AfxMessageBox(_T("File open error"));
+				#endif
+					return;
+			}
+
+			WCHAR path_t[PATH_SIZE];
+			size_t* size = new size_t;
+			mbstowcs_s(size, path_t, PATH_SIZE, path, PATH_SIZE);
 
 			dwErrorFlags = GetLastError();
 			if (dwErrorFlags == ERROR_IO_INCOMPLETE)
@@ -112,7 +126,9 @@ void SerialPort::readFile()
 				{
 					m_fileProgress.SetPos(0);
 				}
-				m_logMessage.AddString(L"Download file complete.");
+				m_logMessage.AddString(m_strTime);
+				m_logMessage.AddString(L"Download file complete");
+				m_logMessage.AddString(path_t);
 			}
 			fclose(m_fp);
 			memset(buf, 0, BUF_SIZE);
@@ -123,6 +139,7 @@ void SerialPort::readFile()
 		{
 			delete[] buf;
 			ClearCommError(m_hComport, &dwErrorFlags, &comstat);
+			PurgeComm(m_hComport, PURGE_TXABORT | PURGE_TXABORT);
 			return;
 		}
 	}
@@ -134,6 +151,7 @@ SerialPort::~SerialPort()
 	{
 		fclose(m_fp);
 	}
+	CancelIo(m_hComport);
 	PurgeComm(m_hComport, PURGE_TXCLEAR | PURGE_RXCLEAR);
 	CloseHandle(m_hComport);
 }

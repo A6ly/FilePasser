@@ -29,21 +29,21 @@ private:
 protected:
 	HICON m_hIcon;
 	CComboBox* m_combo_protocol, *m_combo_baudrate, *m_combo_databit, 
-			  *m_combo_stopbit, *m_combo_paritybit;
+			  *m_combo_stopbit, *m_combo_paritybit, *m_combo_portName;
 
 private:
 	int m_netType;
 	int m_baudrate, m_databit, m_stopbit, m_paritybit;
-	CString m_portName;
+	CString m_strTime;
 
 	// Generated message map functions
 	virtual BOOL OnInitDialog();
-	void LoadListBox();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
 	afx_msg void OnPaint();
 	afx_msg HCURSOR OnQueryDragIcon();
 	DECLARE_MESSAGE_MAP()
 public:
+	void SaveLog();
 	CListBox logMessage;
 	CProgressCtrl fileProgress;
 	afx_msg void OnGetMinMaxInfo(MINMAXINFO* lpMMI);
@@ -55,7 +55,6 @@ public:
 	afx_msg void OnCbnSelchangeComboBaudrate();
 	afx_msg void OnBnClickedButtonOpen();
 	afx_msg void OnSelcancelServerLoglist();
-	afx_msg void OnEnChangeEditComport();
 	afx_msg void OnCbnSelchangeComboParitybit();
 	afx_msg void OnCbnSelchangeComboStopbit();
 	afx_msg void OnCbnSelchangeComboDatabit();
