@@ -87,6 +87,7 @@ void CFilePasserClientDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PARITY_COMBO, m_comboParityList);
 	DDX_Control(pDX, IDC_IP_EDIT, m_IpEditBox);
 	DDX_Control(pDX, IDC_PORT_EDIT, m_PortEditBox);
+	DDX_Control(pDX, IDC_COM_COMBO, m_comboComList);
 }
 
 BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
@@ -105,6 +106,7 @@ BEGIN_MESSAGE_MAP(CFilePasserClientDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_OPEN_PORT, &CFilePasserClientDlg::OnBnClickedButtonOpenPort)
 	ON_BN_CLICKED(IDC_BUTTON_CLOSE_PORT, &CFilePasserClientDlg::OnBnClickedButtonClosePort)
 //	ON_CBN_SELCHANGE(IDC_PROTOCOL_COMBO, &CFilePasserClientDlg::OnCbnSelchangeProtocolCombo)
+//ON_CBN_SELCHANGE(IDC_PROTOCOL_COMBO, &CFilePasserClientDlg::OnCbnSelchangeProtocolCombo)
 END_MESSAGE_MAP()
 
 
@@ -141,6 +143,12 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 
 	// TODO: 여기에 추가 초기화 작업을 추가합니다.
 
+	m_comboComList.AddString(_T("COM1"));
+	m_comboComList.AddString(_T("COM2"));
+	m_comboComList.AddString(_T("COM3"));
+	m_comboComList.AddString(_T("COM4"));
+	m_comboComList.AddString(_T("COM5"));
+
 	m_comboBaudrateList.AddString(_T("1200"));
 	m_comboBaudrateList.AddString(_T("2400"));
 	m_comboBaudrateList.AddString(_T("4800"));
@@ -172,7 +180,7 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 	GetDlgItem(IDC_BUTTON_OK)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
 
-	GetDlgItem(IDC_DEVICE_EDIT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COM_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(FALSE);
@@ -279,9 +287,14 @@ void CFilePasserClientDlg::OnBnClickedLog()
 
 void CFilePasserClientDlg::Save() {
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strFileName;
-	strFileName.Format(L"%d-%d-%d-%d-%d-%d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strFileName.Format(L"%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 	CString name = strFileName;
 
 	CStdioFile logFile;
@@ -312,9 +325,9 @@ void CFilePasserClientDlg::OnBnClickedRadioSocket()
 	GetDlgItem(IDC_PORT_EDIT)->EnableWindow(TRUE);
 	GetDlgItem(IDC_PROTOCOL_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BUTTON_OK)->EnableWindow(TRUE);
-	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
 
-	GetDlgItem(IDC_DEVICE_EDIT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_COM_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(FALSE);
@@ -338,13 +351,13 @@ void CFilePasserClientDlg::OnBnClickedRadioSerial()
 	m_PortEditBox.Clear();
 	m_comboProtocolList.ResetContent();
 
-	GetDlgItem(IDC_DEVICE_EDIT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_COM_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_PARITY_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BUTTON_OPEN_PORT)->EnableWindow(TRUE);
-	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(FALSE);
 
 	GetDlgItem(IDC_IP_EDIT)->EnableWindow(FALSE);
 	GetDlgItem(IDC_PORT_EDIT)->EnableWindow(FALSE);
@@ -364,9 +377,17 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 	strPort = GetDlgItemInt(IDC_PORT_EDIT);
 
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strTime;
-	strTime.Format(L"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	GetDlgItem(IDC_BUTTON_OK)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(TRUE);
 	
 	if (index == 1) {
 		m_SocketClient->SetWnd(this->m_hWnd);   // Sendmessage 활용을 위한 메인의 핸들을 받는 함수
@@ -389,7 +410,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 
 	else if (index == 2) {
 		char broadcast = '1';
-
+		
 		m_SocketClient->SetWnd(this->m_hWnd);
 		if (m_SocketClient->Create(AF_INET, SOCK_DGRAM, 0) < 0) {
 			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
@@ -409,6 +430,10 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		bcast_group.sin_family = AF_INET;
 		bcast_group.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
 		bcast_group.sin_port = htons(strPort);
+
+		m_IpEditBox.SetSel(0, -1);
+		m_IpEditBox.Clear();
+		GetDlgItem(IDC_IP_EDIT)->EnableWindow(FALSE);
 	}
 
 	else if (index == 3) {
@@ -433,6 +458,8 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		mcast_group.sin_family = AF_INET;
 		mcast_group.sin_addr.S_un.S_addr = inet_addr("235.0.0.27");
 		mcast_group.sin_port = htons(strPort);
+
+		GetDlgItem(IDC_IP_EDIT)->EnableWindow(FALSE);
 	}
 
 	else if (index == 4) {
@@ -463,11 +490,19 @@ void CFilePasserClientDlg::OnBnClickedButtonOpenPort()
 	CString strParity;
 
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strTime;
-	strTime.Format(L"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
-	GetDlgItemText(IDC_DEVICE_EDIT, strCom);
+	GetDlgItem(IDC_BUTTON_OPEN_PORT)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(TRUE);
+
+	GetDlgItemText(IDC_COM_COMBO, strCom);
 	GetDlgItemText(IDC_BAUDRATE_COMBO, strBaudRate);
 	GetDlgItemText(IDC_DATA_COMBO, strDataBits);
 	GetDlgItemText(IDC_STOP_COMBO, strStopBits);
@@ -569,9 +604,14 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 	DWORD dwRead_send;
 
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strTime;
-	strTime.Format(L"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	if (index == 1) {
 		CFileDialog fd1(TRUE, NULL, NULL, OFN_HIDEREADONLY, NULL, NULL);
@@ -877,14 +917,23 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 	}
 }
 
-
 void CFilePasserClientDlg::OnBnClickedButtonClose()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strTime;
-	strTime.Format(L"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	GetDlgItem(IDC_BUTTON_OK)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(FALSE);
+	GetDlgItem(IDC_IP_EDIT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_PORT_EDIT)->EnableWindow(TRUE);
 
 	m_SocketClient->Close();
 	AfxMessageBox(_T("Successful Socket close"), MB_OK | MB_ICONINFORMATION);
@@ -898,9 +947,17 @@ void CFilePasserClientDlg::OnBnClickedButtonClosePort()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	time_t t = time(NULL);
-	struct tm tm = *localtime(&t);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
 	CString strTime;
-	strTime.Format(L"%d-%d-%d %d:%d:%d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strTime.Format(L"%d-%02d-%02d 02%d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
+	GetDlgItem(IDC_BUTTON_OPEN_PORT)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(FALSE);
 
 	CloseHandle(idComDev);
 	AfxMessageBox(_T("Successful COM Port Close"), MB_OK | MB_ICONINFORMATION);

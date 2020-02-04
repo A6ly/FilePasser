@@ -64,4 +64,6 @@ public:
 //	afx_msg void OnCbnSelchangeProtocolCombo();
 	CEdit m_IpEditBox;
 	CEdit m_PortEditBox;
+	CComboBox m_comboComList;
+//	afx_msg void OnCbnSelchangeProtocolCombo();
 };

@@ -1,0 +1,17 @@
+Socket Mode
+
+2020-02-04 09:18:23
+UDP Unicast Socket Create !
+
+2020-02-04 09:18:25
+Socket Close !!!
+
+2020-02-04 09:18:31
+Socket Close !!!
+
+2020-02-04 09:18:32
+Socket Close !!!
+
+2020-02-04 09:18:33
+Socket Close !!!
+
