@@ -13,6 +13,7 @@ class CFilePasserClientDlg : public CDialogEx
 public:
 	CFilePasserClientDlg(CWnd* pParent = nullptr);	// 표준 생성자입니다.
 	SocketClient* m_SocketClient;
+	void Save();
 
 // 대화 상자 데이터입니다.
 	enum { IDD = IDD_FILEPASSERCLIENT_DIALOG };
@@ -46,6 +47,23 @@ public:
 	CComboBox m_comboProtocolList;
 	afx_msg void OnBnClickedButtonClose();
 	CProgressCtrl m_progress;
-	afx_msg void OnLbnSelcancelLogList();
+//	afx_msg void OnLbnSelcancelLogList();
 	CListBox logMessage;
+	afx_msg void OnBnClickedButtonConnect();
+//	afx_msg void OnStnClickedStopBit();
+//	afx_msg void OnCbnSelchangeDataCombo();
+//	afx_msg void OnBnClickedRadioProtocol();
+	afx_msg void OnBnClickedRadioSocket();
+	afx_msg void OnBnClickedRadioSerial();
+	CComboBox m_comboDataBitsList;
+	CComboBox m_comboStopBitsList;
+	CComboBox m_comboBaudrateList;
+	afx_msg void OnBnClickedButtonOpenPort();
+	CComboBox m_comboParityList;
+	afx_msg void OnBnClickedButtonClosePort();
+//	afx_msg void OnCbnSelchangeProtocolCombo();
+	CEdit m_IpEditBox;
+	CEdit m_PortEditBox;
+	CComboBox m_comboComList;
+//	afx_msg void OnCbnSelchangeProtocolCombo();
 };

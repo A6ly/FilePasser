@@ -13,6 +13,7 @@ public:
 	HWND m_hWnd;
 	virtual void OnReceive(int nErrorCode);
 	virtual void OnClose(int nErrorCode);
+	
 
 private:
 	CListBox& m_logMessage;

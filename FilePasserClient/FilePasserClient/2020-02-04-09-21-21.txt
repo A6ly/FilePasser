@@ -1,0 +1,22 @@
+Socket Mode
+
+2020-02-04 09:20:55
+UDP Unicast Socket Create !
+
+2020-02-04 09:20:57
+Socket Close !!!
+
+2020-02-04 09:20:59
+UDP Unicast Socket Create !
+
+2020-02-04 09:21:00
+Socket Close !!!
+
+Serial Mode
+
+2020-02-04 09:21:17
+COM Port Connection Complete !
+
+2020-02-04 029:21:18
+COM Port Close !!!
+

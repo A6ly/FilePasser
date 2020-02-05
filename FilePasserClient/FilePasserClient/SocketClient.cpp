@@ -39,6 +39,8 @@ void SocketClient::OnClose(int nErrorCode) {
 	ShutDown();
 	Close();
 
+
+
 	CSocket::OnClose(nErrorCode);
 
 	if (AfxMessageBox(_T("Disconnected from Server!"), MB_OK | MB_ICONWARNING) == IDOK) {
