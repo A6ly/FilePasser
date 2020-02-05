@@ -4,11 +4,12 @@
 #include "FilePasserServerDlg.h"
 using namespace std;
 
+class CFilePasserServerDlg;
 
-class SocketServer : public CDialogEx
+class SocketServer
 {
 public:
-	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime);
+	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress);
 
 	void TCPServerStart();
 
@@ -18,18 +19,19 @@ public:
 
 	void UDPMultiServerStart();
 
+	void initWinsock();
+
 	virtual ~SocketServer();
 
 protected:
 
 private:
 	CString m_eStr;
-	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;
 	SOCKET m_socket;
 	SOCKET m_accept;
-	FILE *m_recvfp;
+	FILE *m_fp;
 	int m_error;
 };
 
