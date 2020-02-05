@@ -14,11 +14,9 @@
 
 #pragma warning(disable:4996)
 
-#ifdef _DEBUG
 #define new DEBUG_NEW
 #define TTL 64
 #define BUF_SIZE 104857600
-#endif
 
 struct sockaddr_in bcast_group;
 struct sockaddr_in mcast_group;
@@ -294,7 +292,7 @@ void CFilePasserClientDlg::Save() {
 		logMessage.AddString(L"Time ERROR!");
 	}
 	CString strFileName;
-	strFileName.Format(L"%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strFileName.Format(L"C:\\Users\\user\\Desktop\\logList\\Client_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 	CString name = strFileName;
 
 	CStdioFile logFile;
@@ -575,10 +573,16 @@ void CFilePasserClientDlg::OnBnClickedButtonOpenPort()
 	osWrite.OffsetHigh = 0;
 	osWrite.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	
-	AfxMessageBox(_T(" COM Port Connection Complete !"), MB_OK | MB_ICONINFORMATION);
+	AfxMessageBox(_T(" COM Port Open Complete !"), MB_OK | MB_ICONINFORMATION);
 	logMessage.AddString(strTime);
-	logMessage.AddString(L"COM Port Connection Complete !");
+	logMessage.AddString(L"COM Port Open Complete !");
 	logMessage.AddString(L"");
+
+	GetDlgItem(IDC_COM_COMBO)->EnableWindow(FALSE);
+	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(FALSE);
+	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(FALSE);
+	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(FALSE);
+	GetDlgItem(IDC_PARITY_COMBO)->EnableWindow(FALSE);
 }
 
 void CFilePasserClientDlg::OnBnClickedButtonFilesend()
@@ -964,4 +968,10 @@ void CFilePasserClientDlg::OnBnClickedButtonClosePort()
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"COM Port Close !!!");
 	logMessage.AddString(L"");
+
+	GetDlgItem(IDC_COM_COMBO)->EnableWindow(TRUE);
+	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(TRUE);
+	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(TRUE);
+	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(TRUE);
+	GetDlgItem(IDC_PARITY_COMBO)->EnableWindow(TRUE);
 }
