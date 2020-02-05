@@ -21,12 +21,19 @@
 #define IDC_COMBO_BAUDRATE              1012
 #define IDC_COMBO4                      1013
 #define IDC_COMBO_COMPROT               1013
+#define IDC_COMBO_DATABIT               1013
 #define IDC_BUTTON2                     1014
 #define IDC_BUTTON_OPEN                 1014
 #define IDC_BUTTON3                     1015
 #define IDC_BUTTON_CANCEL               1015
-#define IDC_BUTTON_CLOSE                1015
-#define IDC_PROGRESS1                   1016
+#define DC_BUTTON_OPEN                  1015
+#define IDC_COMBO_STOPBIT               1016
+#define IDC_EDIT_COMPORT                1017
+#define IDC_BUTTON4                     1017
+#define IDC_BUTTON_CLOSE                1017
+#define IDC_COMBO_PARITYBIT             1018
+#define IDC_COMBO1                      1019
+#define IDC_COMBO_COMPORT               1019
 
 // Next default values for new objects
 // 
@@ -34,7 +41,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        133
 #define _APS_NEXT_COMMAND_VALUE         32771
-#define _APS_NEXT_CONTROL_VALUE         1017
+#define _APS_NEXT_CONTROL_VALUE         1021
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

@@ -1,38 +1,32 @@
 #pragma once
 #include "pch.h"
-#include "FilePasserServer.h"
-#include "FilePasserServerDlg.h"
 using namespace std;
 
-class CFilePasserServerDlg;
+typedef struct {
+	char addr_ip[16];
+	char addr_group_ip[16];
+	int  port;
+} network_config;
 
 class SocketServer
 {
 public:
-	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress);
-
-	void TCPServerStart();
-
-	void UDPServerStart();
-
-	void UDPBroadServerStart();
-
-	void UDPMultiServerStart();
-
-	void initWinsock();
+	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime);
 
 	virtual ~SocketServer();
 
 protected:
-
-private:
+	FILE* m_recvfp;
+	int m_error;
 	CString m_eStr;
+	SOCKET m_socket;
+	struct sockaddr_in addr_server, addr_client;
+	network_config* netconfig;
+private:
+	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;
-	SOCKET m_socket;
-	SOCKET m_accept;
-	FILE *m_fp;
-	int m_error;
 };
+
 
 
