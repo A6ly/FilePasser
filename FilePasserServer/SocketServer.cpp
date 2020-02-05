@@ -7,9 +7,6 @@
 #include <filesystem>
 #include <chrono>
 
-/*#define netconfig->addr_ip "192.168.012.272"
-#define ADDR_GROUP "235.0.0.27"
-#define netconfig->port 20200*/
 #define MAX_CONNECTION 5
 #define BUF_SIZE 1000000
 #define SIZE 5000
@@ -46,13 +43,14 @@ SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CS
 	{
 		return;
 	}
+
 	fgets(netconfig->addr_ip, sizeof(char) * 16, config_fp);
 	netconfig->addr_ip[strlen(netconfig->addr_ip) - 1] = '\0';
 	fgets(netconfig->addr_group_ip, sizeof(char) * 16, config_fp);
 	netconfig->addr_group_ip[strlen(netconfig->addr_group_ip) - 1] = '\0';
-	fgets(port, sizeof(char) * 16, config_fp);
-
+	fgets(port, sizeof(char) * 7, config_fp);
 	netconfig->port = atoi(port);
+
 	fclose(config_fp);
 }
 
@@ -678,9 +676,10 @@ SocketServer::~SocketServer()
 {
 	if (m_recvfp != nullptr)
 		fclose(m_recvfp);
-	closesocket(m_socket);
 	if (m_accept != NULL)
 		closesocket(m_accept);
+	closesocket(m_socket);
+	free(netconfig);
 	WSACleanup();
 }
 // SocketServer member functions

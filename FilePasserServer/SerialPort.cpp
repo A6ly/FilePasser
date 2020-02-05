@@ -86,8 +86,16 @@ void SerialPort::readFile()
 		char path[PATH_SIZE] = "C:/Users/user/Desktop/recv/";
 		
 		readStatus = ReadFile(m_hComport, buf, bytesRead, &bytesRead, &overlapped);
-		m_logMessage.AddString(m_strTime);
-		m_logMessage.AddString(L"Incoming Data...");
+		if (readStatus == 0)
+		{
+			#ifdef DEBUG
+				m_eStr.Format(_T("Read File error Code: %d"), GetLastError());
+				AfxMessageBox(m_eStr);
+			#else
+				AfxMessageBox(_T("Can not open I/O port"));
+			#endif
+				return;
+		}
 		while (overlappedStatus = GetOverlappedResult(m_hComport, &overlapped, &bytesRead, TRUE))
 		{
 			token = strtok_s(buf, "?", &nextTokens);

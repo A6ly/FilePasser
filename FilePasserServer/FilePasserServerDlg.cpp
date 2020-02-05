@@ -364,7 +364,8 @@ void CFilePasserServerDlg::SaveLog()
 	else
 	{
 		CString strFilename;
-		strFilename.Format(L"C:\\Users\\user\\Desktop\\logList\\Server_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+		strFilename.Format(L"C:\\Users\\user\\Desktop\\logList\\Server_%d-%02d-%02d-%02d-%02d-%02d.txt", 
+							tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 		CStdioFile logFile;
 
