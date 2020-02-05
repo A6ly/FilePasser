@@ -10,20 +10,19 @@
 <<<<<<< HEAD
 =======
 #define PORT 20200
->>>>>>> d091b3f6c1230fa88ff7828b36003a1a60b9c45b
+>>>>>>> parent of 33e144a... fae
 #define MAX_CONNECTION 5
-#define ADDR_IP "192.168.0.27"
-#define ADDR_GROUP "235.0.0.27"
 #define BUF_SIZE 1000000
 #define SIZE 5000
 #define FILE_NAME_SIZE 50
 #define PATH_SIZE 100
 
 // SocketServer
-SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress) 
-	: m_socket(NULL), m_fp(nullptr), m_error(0), m_accept(NULL)
-	, m_logMessage(logMessage), m_fileProgress(fileProgress)
+SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime)
+	: m_socket(NULL), m_error(0), m_recvfp(nullptr)
+	, m_logMessage(logMessage), m_fileProgress(fileProgress), m_strTime(strTime)
 {
+	netconfig = (network_config*)malloc(sizeof(network_config));
 	// Winsock 초기화 
 	WSADATA wsa;
 	int m_error = WSAStartup(MAKEWORD(2, 2), &wsa);
@@ -50,9 +49,10 @@ SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress)
 	fgets(port, sizeof(char) * 7, config_fp);
 	netconfig->port = atoi(port);
 
-	fclose(config_fp);
+	addr_server.sin_family = AF_INET;
+	addr_server.sin_addr.S_un.S_addr = inet_addr(netconfig->addr_ip);
+	addr_server.sin_port = htons(netconfig->port);
 =======
->>>>>>> d091b3f6c1230fa88ff7828b36003a1a60b9c45b
 }
 
 
@@ -283,272 +283,23 @@ void SocketServer::UDPServerStart()
 		m_logMessage.AddString(L"Download complete.");
 	}
 }
+>>>>>>> parent of 33e144a... fae
 
-
-//////////////////////////////////////////
-// UDP Broadcast 서버 구동을 위한 메소드
-void SocketServer::UDPBroadServerStart()
-{
-	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (m_socket == INVALID_SOCKET)
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	char broadcast = '1';
-
-	if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	struct sockaddr_in server;
-	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
-
-	if (::bind(m_socket, (sockaddr*)&server, sizeof(server)) != 0)
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	while (1)
-	{
-		int bytes = 0;
-		int totalBytes = 0;
-		int fileNameSize = 0, pos = 0, fileSize = 0;
-
-		int len = sizeof(server);
-		char* buf = new char[SIZE];
-		char* fileSizeBuf = new char[4];
-		char* path = new char[PATH_SIZE];
-		char nameBuf[FILE_NAME_SIZE];
-
-		m_fileProgress.SetPos(pos);
-
-		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
-		memset(buf, 0, SIZE);
-		memset(fileSizeBuf, 0, 4);
-		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
-
-		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
-		if (fileNameSize == SOCKET_ERROR)
-		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		else if (m_socket == INVALID_SOCKET)
-		{
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
-		
-		fileSize = recvfrom(m_socket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&server, &len);
-		if (fileSize == SOCKET_ERROR)
-		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		else if (m_socket == INVALID_SOCKET)
-		{
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		memcpy_s(&totalBytes, sizeof(int), fileSizeBuf, sizeof(int));
-		m_logMessage.AddString(L"Downloading file...");
-
-		m_fileProgress.SetRange(0, totalBytes);
-
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
-		if (ferr != 0)
-		{
-			m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(m_eStr);
-			return;
-		}
-
-		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
-		{
-			//m_logMessage.AddString(L"Downloading file...");
-			if (bytes == SOCKET_ERROR)
-			{
-				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
-				return;
-			}
-			else if (m_socket == INVALID_SOCKET)
-			{
-				AfxMessageBox(L"Disconnected with Client");
-				return;
-			}
-			totalBytes -= bytes;
-			pos += bytes;
-			fwrite(buf, sizeof(char), bytes, m_fp);
-			if (totalBytes < 0)
-				break;
-		}
-		m_fileProgress.SetPos(pos);
-		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
-			m_fileProgress.SetPos(0);
-
-		fclose(m_fp);
-		delete[] path;
-		m_logMessage.AddString(L"Download complete.");
-	}
-}
-
-
-//////////////////////////////////////////
-// UDP Multicast 서버 구동을 위한 메소드
-void SocketServer::UDPMultiServerStart()
-{
-	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-
-	if (m_socket == INVALID_SOCKET)
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Create socket failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	struct sockaddr_in server;
-	server.sin_family = AF_INET;
-	server.sin_addr.S_un.S_addr = inet_addr(ADDR_IP);
-	server.sin_port = htons(PORT);
-
-	if (::bind(m_socket, (const sockaddr*)&server, sizeof(server)))
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Bind failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	struct ip_mreq mreq;
-	mreq.imr_multiaddr.S_un.S_addr = inet_addr(ADDR_GROUP);
-	mreq.imr_interface.S_un.S_addr = htonl(INADDR_ANY);
-
-	if (setsockopt(m_socket, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*)&mreq, sizeof(mreq)) != 0)
-	{
-		m_error = WSAGetLastError();
-		m_eStr.Format(_T("Setsockopt failed Error Code: %d"), m_error);
-		AfxMessageBox(m_eStr);
-		return;
-	}
-
-	while (1)
-	{
-		int bytes = 0;
-		int totalBytes = 0;
-		int fileNameSize = 0, pos = 0, fileSize = 0;
-
-		int len = sizeof(server);
-		char* buf = new char[SIZE];
-		char* fileSizeBuf = new char[4];
-		char* path = new char[PATH_SIZE];
-		char nameBuf[FILE_NAME_SIZE];
-
-		m_fileProgress.SetPos(pos);
-
-		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
-		memset(buf, 0, SIZE);
-		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
-
-		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&server, &len);
-		if (fileNameSize == SOCKET_ERROR)
-		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		else if (m_socket == INVALID_SOCKET)
-		{
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
-
-		fileSize = recvfrom(m_socket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&server, &len);
-		if (fileSize == SOCKET_ERROR)
-		{
-			//m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		else if (m_socket == INVALID_SOCKET)
-		{
-			AfxMessageBox(L"Disconnected with Client");
-			return;
-		}
-		memcpy_s(&totalBytes, sizeof(int), fileSizeBuf, sizeof(int));
-		m_logMessage.AddString(L"Downloading file...");
-
-		m_fileProgress.SetRange(0, totalBytes);
-
-		errno_t ferr = fopen_s(&m_fp, path, "wb");
-		if (ferr != 0)
-		{
-			m_eStr.Format(_T("File open error Code: %d"), ferr);
-			AfxMessageBox(m_eStr);
-			return;
-		}
-
-		while ((bytes = recvfrom(m_socket, buf, SIZE, 0, (SOCKADDR*)&server, &len)) != 0)
-		{
-			//m_logMessage.AddString(L"Downloading file...");
-			if (bytes == SOCKET_ERROR)
-			{
-				m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
-				AfxMessageBox(m_eStr);
-				return;
-			}
-			else if (m_socket == INVALID_SOCKET)
-			{
-				AfxMessageBox(L"Disconnected with Client");
-				return;
-			}
-			totalBytes -= bytes;
-			pos += bytes;
-			fwrite(buf, sizeof(char), bytes, m_fp);
-			if (totalBytes < 0)
-				break;
-		}
-		m_fileProgress.SetPos(pos);
-		if ((AfxMessageBox(_T("Download complete"), MB_OK | MB_ICONINFORMATION) == IDOK))
-			m_fileProgress.SetPos(0);
-		fclose(m_fp);
-		delete[] path;
-		m_logMessage.AddString(L"Downloading complete.");
-	}
+	fclose(config_fp);
 }
 
 SocketServer::~SocketServer()
 {
 <<<<<<< HEAD
-	if (m_recvfp != nullptr)
-		fclose(m_recvfp);
+	closesocket(m_socket);
+	free(netconfig);
 =======
 	if (m_fp != nullptr)
 		fclose(m_fp);
 	closesocket(m_socket);
->>>>>>> d091b3f6c1230fa88ff7828b36003a1a60b9c45b
 	if (m_accept != NULL)
 		closesocket(m_accept);
-	closesocket(m_socket);
-	free(netconfig);
+>>>>>>> parent of 33e144a... fae
 	WSACleanup();
 }
 // SocketServer member functions
