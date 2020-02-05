@@ -1,0 +1,10 @@
+Serial Mode
+
+Socket Mode
+
+2020-02-04 09:20:19
+UDP Unicast Socket Create !
+
+2020-02-04 09:20:21
+Socket Close !!!
+

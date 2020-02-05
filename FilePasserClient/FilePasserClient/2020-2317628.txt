@@ -1,0 +1,14 @@
+Serial Mode
+
+2020-2-3 17:6:18
+COM Port Connection Complete !
+
+
+2020-2-3 17:6:19
+File Name send
+2020-2-3 17:6:19
+File Data send Completion !
+
+2020-2-3 17:6:26
+COM Port Close !!!
+
