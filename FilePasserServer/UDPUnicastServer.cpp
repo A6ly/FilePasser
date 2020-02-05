@@ -11,10 +11,10 @@ UDPUnicastServer::UDPUnicastServer(CListBox& logMessage, CProgressCtrl& fileProg
 
 void UDPUnicastServer::createSocket()
 {
-	m_udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
 	// 家南 抗寇贸府
-	if (m_udpSocket == INVALID_SOCKET)
+	if (m_socket == INVALID_SOCKET)
 	{
 		#ifdef DEBUG
 				m_error = WSAGetLastError();
@@ -29,7 +29,7 @@ void UDPUnicastServer::createSocket()
 
 void UDPUnicastServer::bindSocket()
 {
-	if (::bind(m_udpSocket, (const sockaddr*)&addr_server, sizeof(addr_server)))
+	if (::bind(m_socket, (const sockaddr*)&addr_server, sizeof(addr_server)))
 	{
 		#ifdef DEBUG
 				m_error = WSAGetLastError();
@@ -63,7 +63,7 @@ void UDPUnicastServer::recvFile()
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Waiting client UDPSocket for download file.");
 
-		fileNameSize = recvfrom(m_udpSocket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&addr_server, &len);
+		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&addr_server, &len);
 		if (fileNameSize == INVALID_SOCKET)
 		{
 		#ifdef DEBUG
@@ -81,7 +81,7 @@ void UDPUnicastServer::recvFile()
 
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
-		fileSize = recvfrom(m_udpSocket, fileSizeBuf, 4, 0, (SOCKADDR*)&addr_server, &len);
+		fileSize = recvfrom(m_socket, fileSizeBuf, 4, 0, (SOCKADDR*)&addr_server, &len);
 		if (fileSize == SOCKET_ERROR)
 		{
 			#ifdef DEBUG
@@ -92,7 +92,7 @@ void UDPUnicastServer::recvFile()
 			#endif
 				  return;
 		}
-		else if (m_udpSocket == INVALID_SOCKET)
+		else if (m_socket == INVALID_SOCKET)
 		{
 			AfxMessageBox(L"Disconnected with Client");
 			return;
@@ -122,7 +122,7 @@ void UDPUnicastServer::recvFile()
 		mbstowcs_s(size, path_t, PATH_SIZE, path, PATH_SIZE);
 		m_logMessage.AddString(path_t);
 
-		while ((bytes = recvfrom(m_udpSocket, buf, DGRM_SIZE, 0, (SOCKADDR*)&addr_server, &len)) != 0)
+		while ((bytes = recvfrom(m_socket, buf, DGRM_SIZE, 0, (SOCKADDR*)&addr_server, &len)) != 0)
 		{
 			//m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
@@ -135,7 +135,7 @@ void UDPUnicastServer::recvFile()
 				#endif
 					  return;
 			}
-			else if (m_udpSocket == INVALID_SOCKET)
+			else if (m_socket == INVALID_SOCKET)
 			{
 				AfxMessageBox(L"Disconnected with Client");
 				return;
@@ -175,5 +175,5 @@ UDPUnicastServer::~UDPUnicastServer()
 		fclose(m_recvfp);
 	}
 
-	closesocket(m_udpSocket);
+	closesocket(m_socket);
 }

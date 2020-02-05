@@ -312,7 +312,7 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 	}
 	else if (m_netType == NetType::TYPE_NONE)
 	{
-		AfxMessageBox(L"Please select NetType to open server");
+		AfxMessageBox(L"Please select Protocol to open server");
 	}
 	else
 	{

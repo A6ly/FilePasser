@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "TCPServer.h"
+#include <process.h>
 
 struct sockaddr_in addr_server, addr_client;
 
@@ -12,8 +13,8 @@ TCPServer::TCPServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString&
 
 void TCPServer::createSocket()
 {
-	m_tcpSocket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-	if (m_tcpSocket == INVALID_SOCKET)
+	m_socket = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	if (m_socket == INVALID_SOCKET)
 	{
 		#ifdef DEBUG
 				m_eStr.Format(_T("Create socket failed Error Code: %d"), WSAGetLastError());
@@ -27,7 +28,7 @@ void TCPServer::createSocket()
 
 void TCPServer::bindSocket()
 {
-	if (::bind(m_tcpSocket, (sockaddr*)&addr_server, sizeof(addr_server)) != 0)
+	if (::bind(m_socket, (sockaddr*)&addr_server, sizeof(addr_server)) != 0)
 	{
 		#ifdef DEBUG
 				m_eStr.Format(_T("Bind failed Error Code: %d"), WSAGetLastError());
@@ -41,7 +42,7 @@ void TCPServer::bindSocket()
 
 void TCPServer::acceptSocket()
 {
-	if (listen(m_tcpSocket, SOMAXCONN_HINT(5) != 0))
+	if (listen(m_socket, SOMAXCONN_HINT(8) != 0))
 	{
 		#ifdef DEBUG
 				m_eStr.Format(_T("Listen failed Error Code: %d"), WSAGetLastError());
@@ -60,21 +61,23 @@ void TCPServer::acceptSocket()
 	m_logMessage.AddString(L"Waiting accept to client socket...");
 	m_logMessage.AddString(L" ");
 	m_fileProgress.SetRange(0, 100);
-
-	m_newSocket = accept(m_tcpSocket, (sockaddr*)&addr_client, &clientLen);
+	
+	m_newSocket = accept(m_socket, (sockaddr*)&addr_client, &clientLen);
 	if (m_newSocket == INVALID_SOCKET)
 	{
-		#ifdef DEBUG
-				m_eStr.Format(_T("Accept failed Error Code: %d"), WSAGetLastError());
-				AfxMessageBox(m_eStr);
-		#else
-				AfxMessageBox(L"Accept close");
-		#endif
-				return;
+	#ifdef DEBUG
+			m_eStr.Format(_T("Accept failed Error Code: %d"), WSAGetLastError());
+			AfxMessageBox(m_eStr);
+	#else
+			AfxMessageBox(L"Accept close");
+	#endif
+			return;
 	}
+
 	m_logMessage.AddString(L" ");
 	m_logMessage.AddString(m_strTime);
 	m_logMessage.AddString(L"Successful client connecting");
+	
 }
 
 void TCPServer::recvFile(SOCKET accept)
@@ -186,5 +189,5 @@ TCPServer::~TCPServer()
 	{
 		closesocket(m_newSocket);
 	}
-	closesocket(m_tcpSocket);
+	closesocket(m_socket);
 }

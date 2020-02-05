@@ -13,9 +13,7 @@ private:
 	void bindSocket();
 	void acceptSocket();
 	void recvFile(SOCKET accept);
-	SOCKET m_tcpSocket;
 	SOCKET m_newSocket;
-	CString m_eStr;
 	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;

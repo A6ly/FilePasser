@@ -13,7 +13,6 @@ private:
 	void createSocket();
 	void bindSocket();
 	void recvFile();
-	SOCKET m_udpSocket;
 	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;

@@ -10,8 +10,8 @@ UDPBroadcastServer::UDPBroadcastServer(CListBox& logMessage, CProgressCtrl& file
 
 void UDPBroadcastServer::createSocket()
 {
-	m_udpSocket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-	if (m_udpSocket == INVALID_SOCKET)
+	m_socket = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+	if (m_socket == INVALID_SOCKET)
 	{
 		#ifdef DEBUG
 			  m_error = WSAGetLastError();
@@ -25,7 +25,7 @@ void UDPBroadcastServer::createSocket()
 
 	char broadcast = '1';
 
-	if (setsockopt(m_udpSocket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
+	if (setsockopt(m_socket, SOL_SOCKET, SO_BROADCAST, &broadcast, sizeof(broadcast)) != 0)
 	{
 		#ifdef DEBUG
 			 m_error = WSAGetLastError();
@@ -40,7 +40,7 @@ void UDPBroadcastServer::createSocket()
 
 void UDPBroadcastServer::bindSocket()
 {
-	if (::bind(m_udpSocket, (sockaddr*)&addr_server, sizeof(addr_server)) != 0)
+	if (::bind(m_socket, (sockaddr*)&addr_server, sizeof(addr_server)) != 0)
 	{
 		#ifdef DEBUG
 			m_error = WSAGetLastError();
@@ -76,7 +76,7 @@ void UDPBroadcastServer::recvFile()
 		m_logMessage.AddString(m_strTime);
 		m_logMessage.AddString(L"Waiting client UDPSocket for download file");
 
-		fileNameSize = recvfrom(m_udpSocket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&addr_server, &len);
+		fileNameSize = recvfrom(m_socket, nameBuf, FILE_NAME_SIZE, 0, (SOCKADDR*)&addr_server, &len);
 		if (fileNameSize == SOCKET_ERROR)
 		{
 			#ifdef DEBUG
@@ -87,14 +87,14 @@ void UDPBroadcastServer::recvFile()
 			#endif
 				  return;
 		}
-		else if (m_udpSocket == INVALID_SOCKET)
+		else if (m_socket == INVALID_SOCKET)
 		{
 			AfxMessageBox(L"Disconnected with Client");
 			return;
 		}
 		strncat_s(path, PATH_SIZE, nameBuf, fileNameSize);
 
-		fileSize = recvfrom(m_udpSocket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&addr_server, &len);
+		fileSize = recvfrom(m_socket, fileSizeBuf, sizeof(int), 0, (SOCKADDR*)&addr_server, &len);
 		if (fileSize == SOCKET_ERROR)
 		{
 			#ifdef DEBUG
@@ -105,7 +105,7 @@ void UDPBroadcastServer::recvFile()
 			#endif
 				  return;
 		}
-		else if (m_udpSocket == INVALID_SOCKET)
+		else if (m_socket == INVALID_SOCKET)
 		{
 			AfxMessageBox(L"Disconnected with Client");
 			return;
@@ -134,7 +134,7 @@ void UDPBroadcastServer::recvFile()
 		mbstowcs_s(size, path_t, PATH_SIZE, path, PATH_SIZE);
 		m_logMessage.AddString(path_t);
 
-		while ((bytes = recvfrom(m_udpSocket, buf, DGRM_SIZE, 0, (SOCKADDR*)&addr_server, &len)) != 0)
+		while ((bytes = recvfrom(m_socket, buf, DGRM_SIZE, 0, (SOCKADDR*)&addr_server, &len)) != 0)
 		{
 			//m_logMessage.AddString(L"Downloading file...");
 			if (bytes == SOCKET_ERROR)
@@ -147,7 +147,7 @@ void UDPBroadcastServer::recvFile()
 				#endif
 					return;
 			}
-			else if (m_udpSocket == INVALID_SOCKET)
+			else if (m_socket == INVALID_SOCKET)
 			{
 				AfxMessageBox(L"Disconnected with Client");
 				return;
@@ -184,5 +184,5 @@ UDPBroadcastServer::~UDPBroadcastServer()
 		fclose(m_recvfp);
 	}
 
-	closesocket(m_udpSocket);
+	closesocket(m_socket);
 }

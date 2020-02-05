@@ -83,7 +83,8 @@ void UDPMulticastServer::recvFile()
 		if (fileNameSize == SOCKET_ERROR)
 		{
 		#ifdef DEBUG
-			  m_eStr.Format(_T("File read error code: %d"), SOCKET_ERROR);
+			  m_error = WSAGetLastError();
+			  m_eStr.Format(_T("File read error code: %d"), m_error);
 			  AfxMessageBox(m_eStr);
 		#else
 			  AfxMessageBox(L"Disconnected with Client");
