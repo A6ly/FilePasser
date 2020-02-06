@@ -292,7 +292,7 @@ void CFilePasserClientDlg::Save() {
 		logMessage.AddString(L"Time ERROR!");
 	}
 	CString strFileName;
-	strFileName.Format(L"C:\\Users\\user\\Desktop\\logList\\Client_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strFileName.Format(L"..\\Client_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 	CString name = strFileName;
 
 	CStdioFile logFile;
@@ -311,6 +311,7 @@ void CFilePasserClientDlg::OnBnClickedRadioSocket()
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	logMessage.AddString(L"Socket Mode");
 	logMessage.AddString(L"");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	CloseHandle(idComDev);
 
@@ -340,6 +341,7 @@ void CFilePasserClientDlg::OnBnClickedRadioSerial()
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	logMessage.AddString(L"Serial Mode");
 	logMessage.AddString(L"");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	m_SocketClient->Close();
 
@@ -396,6 +398,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 				logMessage.AddString(strTime);
 				logMessage.AddString(L"※ERROR : Failed to connect TCP Socket");
 				logMessage.AddString(L"");
+				logMessage.SetCurSel(logMessage.GetCount() - 1);
 			}
 		}
 		else {
@@ -403,6 +406,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"TCP Socket Create & Connect !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
 
@@ -414,6 +418,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"※ERROR : Can't create  UDP Broadcast Socket");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 			PostQuitMessage(0);
 			return;
 		}
@@ -422,6 +427,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"UDP Broadcast Socket Create !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 		m_SocketClient->SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
 		memset(&bcast_group, 0, sizeof(bcast_group));
@@ -442,6 +448,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"※ERROR : Can't create  UDP Multicast Socket");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 			PostQuitMessage(0);
 			return;
 		}
@@ -450,6 +457,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"UDP Multicast Socket Create !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 		m_SocketClient->SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
 		memset(&mcast_group, 0, sizeof(mcast_group));
@@ -466,6 +474,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			AfxMessageBox(_T("※ERROR : Can't create send Socket"), MB_OK | MB_ICONERROR);
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"※ERROR : Can't create  UDP Unicast Socket");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 			PostQuitMessage(0);
 			return;
 		}
@@ -474,6 +483,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"UDP Unicast Socket Create !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
 }
@@ -577,6 +587,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOpenPort()
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"COM Port Open Complete !");
 	logMessage.AddString(L"");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	GetDlgItem(IDC_COM_COMBO)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(FALSE);
@@ -645,6 +656,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 			
 			m_progress.SetPos(dwRead_send);
 			if (AfxMessageBox(_T("File Transfer Complete!"), MB_OK | MB_ICONINFORMATION) == IDOK) {
@@ -722,6 +734,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -795,6 +808,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -868,6 +882,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
@@ -917,6 +932,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
 			logMessage.AddString(L"");
+			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
 }
@@ -944,6 +960,7 @@ void CFilePasserClientDlg::OnBnClickedButtonClose()
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"Socket Close !!!");
 	logMessage.AddString(L"");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 }
 
 
@@ -968,6 +985,7 @@ void CFilePasserClientDlg::OnBnClickedButtonClosePort()
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"COM Port Close !!!");
 	logMessage.AddString(L"");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	GetDlgItem(IDC_COM_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(TRUE);
