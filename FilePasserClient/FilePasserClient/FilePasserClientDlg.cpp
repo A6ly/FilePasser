@@ -197,6 +197,7 @@ void CFilePasserClientDlg::OnSysCommand(UINT nID, LPARAM lParam)
 		dlgAbout.DoModal();
 	}
 	else if (nID == SC_CLOSE) {
+		logMessage.AddString(L"@@@ Program Termination @@@");
 		Save();
 		CDialogEx::OnSysCommand(nID, lParam);
 	}
@@ -292,7 +293,7 @@ void CFilePasserClientDlg::Save() {
 		logMessage.AddString(L"Time ERROR!");
 	}
 	CString strFileName;
-	strFileName.Format(L"..\\Client_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	strFileName.Format(L".\\Client_%d-%02d-%02d-%02d-%02d-%02d.txt", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 	CString name = strFileName;
 
 	CStdioFile logFile;
@@ -310,7 +311,6 @@ void CFilePasserClientDlg::OnBnClickedRadioSocket()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	logMessage.AddString(L"Socket Mode");
-	logMessage.AddString(L"");
 	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	CloseHandle(idComDev);
@@ -340,7 +340,6 @@ void CFilePasserClientDlg::OnBnClickedRadioSerial()
 {
 	// TODO: 여기에 컨트롤 알림 처리기 코드를 추가합니다.
 	logMessage.AddString(L"Serial Mode");
-	logMessage.AddString(L"");
 	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	m_SocketClient->Close();
@@ -397,15 +396,13 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 				m_SocketClient->Close();
 				logMessage.AddString(strTime);
 				logMessage.AddString(L"※ERROR : Failed to connect TCP Socket");
-				logMessage.AddString(L"");
 				logMessage.SetCurSel(logMessage.GetCount() - 1);
 			}
 		}
 		else {
 			AfxMessageBox(_T("Successfully connected to Server"), MB_OK | MB_ICONINFORMATION);
 			logMessage.AddString(strTime);
-			logMessage.AddString(L"TCP Socket Create & Connect !");
-			logMessage.AddString(L"");
+			logMessage.AddString(L"TCP Socket Create & Connect !");			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
@@ -425,8 +422,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
 			logMessage.AddString(strTime);
-			logMessage.AddString(L"UDP Broadcast Socket Create !");
-			logMessage.AddString(L"");
+			logMessage.AddString(L"UDP Broadcast Socket Create !");			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 		m_SocketClient->SetSockOpt(SO_BROADCAST, &broadcast, sizeof(broadcast), SOL_SOCKET);
@@ -434,7 +430,6 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		bcast_group.sin_family = AF_INET;
 		bcast_group.sin_addr.S_un.S_addr = inet_addr("255.255.255.255");
 		bcast_group.sin_port = htons(strPort);
-
 		m_IpEditBox.SetSel(0, -1);
 		m_IpEditBox.Clear();
 		GetDlgItem(IDC_IP_EDIT)->EnableWindow(FALSE);
@@ -455,8 +450,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
 			logMessage.AddString(strTime);
-			logMessage.AddString(L"UDP Multicast Socket Create !");
-			logMessage.AddString(L"");
+			logMessage.AddString(L"UDP Multicast Socket Create !");			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 		m_SocketClient->SetSockOpt(IP_MULTICAST_TTL, &multi_TTL, sizeof(multi_TTL), IPPROTO_IP);
@@ -464,7 +458,6 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		mcast_group.sin_family = AF_INET;
 		mcast_group.sin_addr.S_un.S_addr = inet_addr("235.0.0.27");
 		mcast_group.sin_port = htons(strPort);
-
 		GetDlgItem(IDC_IP_EDIT)->EnableWindow(FALSE);
 	}
 
@@ -481,8 +474,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOk() {
 		else {
 			AfxMessageBox(_T("Successfully create send Socket"), MB_OK | MB_ICONINFORMATION);
 			logMessage.AddString(strTime);
-			logMessage.AddString(L"UDP Unicast Socket Create !");
-			logMessage.AddString(L"");
+			logMessage.AddString(L"UDP Unicast Socket Create !");		
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
@@ -586,7 +578,7 @@ void CFilePasserClientDlg::OnBnClickedButtonOpenPort()
 	AfxMessageBox(_T(" COM Port Open Complete !"), MB_OK | MB_ICONINFORMATION);
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"COM Port Open Complete !");
-	logMessage.AddString(L"");
+	
 	logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 	GetDlgItem(IDC_COM_COMBO)->EnableWindow(FALSE);
@@ -642,7 +634,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			strFileName = strFileName_send;
 			logMessage.AddString(strFileName);
-			logMessage.AddString(L"");
+			
 
 			m_SocketClient->Send(strName_send, NameLength_send);
 			logMessage.AddString(strTime);
@@ -655,7 +647,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			m_SocketClient->Send(data_send, dwRead_send);
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			logMessage.AddString(L"");
+			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 			
 			m_progress.SetPos(dwRead_send);
@@ -685,7 +677,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			strFileName = strFileName_send;
 			logMessage.AddString(strFileName);
-			logMessage.AddString(L"");
+			
 
 			m_SocketClient->SendTo(strName_send, NameLength_send, (struct sockaddr *)&bcast_group, sizeof(bcast_group));
 			logMessage.AddString(strTime);
@@ -733,7 +725,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			logMessage.AddString(L"");
+			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
@@ -807,7 +799,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			logMessage.AddString(L"");
+			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
@@ -833,7 +825,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			strFileName = strFileName_send;
 			logMessage.AddString(strFileName);
-			logMessage.AddString(L"");
+			
 
 			m_SocketClient->SendTo(strName_send, NameLength_send, strPort, strIp);
 			logMessage.AddString(strTime);
@@ -881,7 +873,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			logMessage.AddString(L"");
+			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
@@ -908,7 +900,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			strFileName = strFileName_send;
 			logMessage.AddString(strFileName);
-			logMessage.AddString(L"");
+			
 
 			WriteFile(idComDev, strName_send, NameLength_send, NULL, &osWrite);
 			logMessage.AddString(strTime);
@@ -931,7 +923,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			logMessage.AddString(L"");
+			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}
@@ -959,7 +951,6 @@ void CFilePasserClientDlg::OnBnClickedButtonClose()
 	AfxMessageBox(_T("Successful Socket close"), MB_OK | MB_ICONINFORMATION);
 	logMessage.AddString(strTime);
 	logMessage.AddString(L"Socket Close !!!");
-	logMessage.AddString(L"");
 	logMessage.SetCurSel(logMessage.GetCount() - 1);
 }
 
@@ -980,16 +971,15 @@ void CFilePasserClientDlg::OnBnClickedButtonClosePort()
 	GetDlgItem(IDC_BUTTON_OPEN_PORT)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(FALSE);
 
-	CloseHandle(idComDev);
-	AfxMessageBox(_T("Successful COM Port Close"), MB_OK | MB_ICONINFORMATION);
-	logMessage.AddString(strTime);
-	logMessage.AddString(L"COM Port Close !!!");
-	logMessage.AddString(L"");
-	logMessage.SetCurSel(logMessage.GetCount() - 1);
-
 	GetDlgItem(IDC_COM_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_BAUDRATE_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_DATA_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_STOP_COMBO)->EnableWindow(TRUE);
 	GetDlgItem(IDC_PARITY_COMBO)->EnableWindow(TRUE);
+
+	CloseHandle(idComDev);
+	AfxMessageBox(_T("Successful COM Port Close"), MB_OK | MB_ICONINFORMATION);
+	logMessage.AddString(strTime);
+	logMessage.AddString(L"COM Port Close !!!");
+	logMessage.SetCurSel(logMessage.GetCount() - 1);
 }
