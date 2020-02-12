@@ -186,6 +186,8 @@ BOOL CFilePasserClientDlg::OnInitDialog()
 	GetDlgItem(IDC_BUTTON_OPEN_PORT)->EnableWindow(FALSE);
 	GetDlgItem(IDC_BUTTON_CLOSE_PORT)->EnableWindow(FALSE);
 
+	SetBackgroundColor(RGB(255, 255, 255));
+
 	return TRUE;  // 포커스를 컨트롤에 설정하지 않으면 TRUE를 반환합니다.
 }
 
@@ -657,9 +659,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
-
 			strName_send = NULL;
-			delete strName_send;
 			delete data_send;
 		}
 	}
@@ -730,9 +730,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
-
 			strName_send = NULL;
-			delete strName_send;
 			delete data_send;
 		}
 	}
@@ -804,9 +802,7 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
-
 			strName_send = NULL;
-			delete strName_send;
 			delete data_send;
 		}
 	}
@@ -873,15 +869,11 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 
 			sendFile_send.Close();
 			strFileName_send.ReleaseBuffer(-1);
-
 			strName_send = NULL;
-			delete strName_send;
-			delete data_send;
 		}
 	}
 
@@ -923,7 +915,6 @@ void CFilePasserClientDlg::OnBnClickedButtonFilesend()
 			}
 			logMessage.AddString(strTime);
 			logMessage.AddString(L"File Data send Completion !");
-			
 			logMessage.SetCurSel(logMessage.GetCount() - 1);
 		}
 	}

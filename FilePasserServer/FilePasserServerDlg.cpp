@@ -58,7 +58,7 @@ END_MESSAGE_MAP()
 // CFilePasserServerDlg dialog
 
 CFilePasserServerDlg::CFilePasserServerDlg(CWnd* pParent /*=nullptr*/)
-	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent), m_serialPort(new SerialPort(logMessage, fileProgress, m_strTime))
+	: CDialogEx(IDD_FILEPASSERSERVER_DIALOG, pParent), m_serialPort(new SerialPort(logMessage, fileProgress))
 	
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -115,18 +115,6 @@ BOOL CFilePasserServerDlg::OnInitDialog()
 			pSysMenu->AppendMenu(MF_STRING, IDM_ABOUTBOX, strAboutMenu);
 		}
 	}
-
-	time_t t = time(NULL);
-	struct tm tm;
-	errno_t err_t = localtime_s(&tm, &t);
-	if (err_t != 0)
-	{
-		AfxMessageBox(L"Error: localtime set Error");
-		exit(1);
-	}
-	m_strTime.Format(L"%d-%02d-%02d-%02d-%02d-%02d", 
-		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
@@ -151,6 +139,8 @@ BOOL CFilePasserServerDlg::OnInitDialog()
 	m_databit = -1;
 	m_stopbit = -1;
 	m_paritybit = -1;
+
+	SetBackgroundColor(RGB(255, 255, 255));
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
@@ -233,7 +223,7 @@ void CFilePasserServerDlg::SaveLog()
 	else
 	{
 		CString strFilename;
-		strFilename.Format(L"C:\\Users\\user\\Desktop\\logList\\Server_%d-%02d-%02d-%02d-%02d-%02d.txt",
+		strFilename.Format(L".\\Server_%d-%02d-%02d-%02d-%02d-%02d.txt",
 			tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 		CStdioFile logFile;
@@ -254,15 +244,25 @@ std::thread threadObj;
 // Start 버튼 클릭 시 소켓 open
 void CFilePasserServerDlg::OnBnClickedConnectButton()
 {
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
 	if (m_netType == NetType::TYPE_TCP)
 	{
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_tcpServer = new TCPServer(logMessage, fileProgress, m_strTime);
+		m_tcpServer = new TCPServer(logMessage, fileProgress);
 		threadObj = std::thread([&]() { m_tcpServer->TCPServerStart(); });
 		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
+		logMessage.AddString(strTime);
 		logMessage.AddString(L"TCP Server Open");
 		logMessage.AddString(L" ");
 
@@ -273,10 +273,10 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_udpUnicastServer = new UDPUnicastServer(logMessage, fileProgress, m_strTime);
+		m_udpUnicastServer = new UDPUnicastServer(logMessage, fileProgress);
 		threadObj = std::thread([&]() { m_udpUnicastServer->UnicastStart(); });
 		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
+		logMessage.AddString(strTime);
 		logMessage.AddString(L"UDP Unicast Server Open");
 		logMessage.AddString(L" ");
 
@@ -287,10 +287,10 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_udpBroadcastServer = new UDPBroadcastServer(logMessage, fileProgress, m_strTime);
+		m_udpBroadcastServer = new UDPBroadcastServer(logMessage, fileProgress);
 		threadObj = std::thread([&]() { m_udpBroadcastServer->BroadcastStart(); });
 		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
+		logMessage.AddString(strTime);
 		logMessage.AddString(L"UDP Broadcast Server Open");
 		logMessage.AddString(L" ");
 
@@ -301,10 +301,10 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 		GetDlgItem(IDC_CONNECT_BUTTON)->SetWindowText(L"Stop");
 		GetDlgItem(IDC_COMBO_PROTOCOL)->EnableWindow(false);
 
-		m_udpMulticastServer = new UDPMulticastServer(logMessage, fileProgress, m_strTime);
+		m_udpMulticastServer = new UDPMulticastServer(logMessage, fileProgress);
 		threadObj = std::thread([&]() { m_udpMulticastServer->MulticastStart(); });
 		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
+		logMessage.AddString(strTime);
 		logMessage.AddString(L"UDP Multicast Server Open");
 		logMessage.AddString(L" ");
 
@@ -350,7 +350,7 @@ void CFilePasserServerDlg::OnBnClickedConnectButton()
 		m_netType = TYPE_NONE;
 
 		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
+		logMessage.AddString(strTime);
 		logMessage.AddString(L"Server Close Connection");
 		logMessage.AddString(L" ");
 
@@ -487,70 +487,93 @@ void CFilePasserServerDlg::OnBnClickedButtonOpen()
 	CString portName;
 	m_combo_portName->GetLBText(nSel, portName);
 
-	if (m_combo_portName == nullptr)
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+	if (err_t != 0)
 	{
-		AfxMessageBox(L"Please insert Comport Name");
-		return;
-	}
-	else if (m_baudrate == -1)
-	{
-		AfxMessageBox(L"Please select Baudrate");
-		return;
-	}
-	else if (m_databit == -1)
-	{
-		AfxMessageBox(L"Please select Databit");
-		return;
-	}
-	else if (m_stopbit == -1)
-	{
-		AfxMessageBox(L"Please select Stopbit");
-		return;
-	}
-	else if (m_paritybit == -1)
-	{
-		AfxMessageBox(L"Please select Paritybit");
-		return;
-	}
-
-
-	if (!m_serialPort->openPort(portName))
-	{
-		AfxMessageBox(L"Error: Can not open serial port");
-		return;
-	}
-
-
-	if (!m_serialPort->configureSerialSet(m_baudrate, m_databit, m_stopbit, m_paritybit))
-	{
-		AfxMessageBox(L"Error: Configure Serial Set Error");
-		return;
+		AfxMessageBox(L"Error: localtime set Error");
+		exit(1);
 	}
 	else
 	{
-		logMessage.AddString(L" ");
-		logMessage.AddString(m_strTime);
-		logMessage.AddString(L"Serial Port Open!");
-		logMessage.AddString(L" ");
+		CString strFilename;
+
+		if (m_combo_portName == nullptr)
+		{
+			AfxMessageBox(L"Please insert Comport Name");
+			return;
+		}
+		else if (m_baudrate == -1)
+		{
+			AfxMessageBox(L"Please select Baudrate");
+			return;
+		}
+		else if (m_databit == -1)
+		{
+			AfxMessageBox(L"Please select Databit");
+			return;
+		}
+		else if (m_stopbit == -1)
+		{
+			AfxMessageBox(L"Please select Stopbit");
+			return;
+		}
+		else if (m_paritybit == -1)
+		{
+			AfxMessageBox(L"Please select Paritybit");
+			return;
+		}
+
+
+		if (!m_serialPort->openPort(portName))
+		{
+			AfxMessageBox(L"Error: Can not open serial port");
+			return;
+		}
+
+
+		if (!m_serialPort->configureSerialSet(m_baudrate, m_databit, m_stopbit, m_paritybit))
+		{
+			AfxMessageBox(L"Error: Configure Serial Set Error");
+			return;
+		}
+		else
+		{
+			logMessage.AddString(L" ");
+			logMessage.AddString(strTime);
+			logMessage.AddString(L"Serial Port Open!");
+			logMessage.AddString(L" ");
+		}
+
+		GetDlgItem(IDC_COMBO_COMPORT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_COMBO_BAUDRATE)->EnableWindow(FALSE);
+		GetDlgItem(IDC_COMBO_DATABIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_COMBO_STOPBIT)->EnableWindow(FALSE);
+		GetDlgItem(IDC_COMBO_PARITYBIT)->EnableWindow(FALSE);
+
+		GetDlgItem(IDC_BUTTON_OPEN)->EnableWindow(FALSE);
+		GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(TRUE);
+		GetDlgItem(IDC_RADIO_RS232)->EnableWindow(FALSE);
+		GetDlgItem(IDC_RADIO_SOCKET)->EnableWindow(FALSE);
+
+		threadObj = std::thread([&]() { m_serialPort->readFile(); });
+
 	}
-
-	GetDlgItem(IDC_COMBO_COMPORT)->EnableWindow(FALSE);
-	GetDlgItem(IDC_COMBO_BAUDRATE)->EnableWindow(FALSE);
-	GetDlgItem(IDC_COMBO_DATABIT)->EnableWindow(FALSE);
-	GetDlgItem(IDC_COMBO_STOPBIT)->EnableWindow(FALSE);
-	GetDlgItem(IDC_COMBO_PARITYBIT)->EnableWindow(FALSE);
-
-	GetDlgItem(IDC_BUTTON_OPEN)->EnableWindow(FALSE);
-	GetDlgItem(IDC_BUTTON_CLOSE)->EnableWindow(TRUE);
-	GetDlgItem(IDC_RADIO_RS232)->EnableWindow(FALSE);
-	GetDlgItem(IDC_RADIO_SOCKET)->EnableWindow(FALSE);
-
-	threadObj = std::thread([&]() { m_serialPort->readFile(); });
-		
 }
 
-void CFilePasserServerDlg::OnBnClickedButtonClose()
-{
+void CFilePasserServerDlg::OnBnClickedButtonClose() {
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		logMessage.AddString(L"Time ERROR!");
+	}
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
 
 	m_serialPort->~SerialPort();
 	if (threadObj.joinable())
@@ -558,7 +581,7 @@ void CFilePasserServerDlg::OnBnClickedButtonClose()
 		threadObj.join();
 	}
 	logMessage.AddString(L" ");
-	logMessage.AddString(m_strTime);
+	logMessage.AddString(strTime);
 	logMessage.AddString(L"Serial Port Close!");
 	logMessage.AddString(L" ");
 

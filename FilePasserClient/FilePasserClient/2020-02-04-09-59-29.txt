@@ -1,4 +1,0 @@
-Serial Mode
-
-Socket Mode
-

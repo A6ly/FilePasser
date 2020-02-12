@@ -11,7 +11,7 @@ typedef struct {
 class SocketServer
 {
 public:
-	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime);
+	SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress);
 
 	virtual ~SocketServer();
 
@@ -23,7 +23,6 @@ protected:
 	struct sockaddr_in addr_server, addr_client;
 	network_config* netconfig;
 private:
-	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;
 };
