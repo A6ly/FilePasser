@@ -4,9 +4,9 @@
 
 struct sockaddr_in addr_server, addr_client;
 
-TCPServer::TCPServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime) 
-	: SocketServer(logMessage, fileProgress, strTime), m_newSocket(0)
-	, m_strTime(strTime), m_logMessage(logMessage), m_fileProgress(fileProgress)
+TCPServer::TCPServer(CListBox& logMessage, CProgressCtrl& fileProgress) 
+	: SocketServer(logMessage, fileProgress), m_newSocket(0)
+	, m_logMessage(logMessage), m_fileProgress(fileProgress)
 {
 
 }
@@ -55,11 +55,21 @@ void TCPServer::acceptSocket()
 
 	int clientLen = sizeof(struct sockaddr_in);
 
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		m_logMessage.AddString(L"Time ERROR!");
+	}
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
 	// ╪рдо Accept
-	m_logMessage.AddString(L" ");
-	m_logMessage.AddString(m_strTime);
+	
+	m_logMessage.AddString(strTime);
 	m_logMessage.AddString(L"Waiting accept to client socket...");
-	m_logMessage.AddString(L" ");
+	
 	m_fileProgress.SetRange(0, 100);
 	
 	m_newSocket = accept(m_socket, (sockaddr*)&addr_client, &clientLen);
@@ -74,14 +84,24 @@ void TCPServer::acceptSocket()
 			return;
 	}
 
-	m_logMessage.AddString(L" ");
-	m_logMessage.AddString(m_strTime);
+	
+	m_logMessage.AddString(strTime);
 	m_logMessage.AddString(L"Successful client connecting");
 	
 }
 
 void TCPServer::recvFile(SOCKET accept)
 {
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		m_logMessage.AddString(L"Time ERROR!");
+	}
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
 	while (true)
 	{
 		int bytes = 0, totalBytes = 0, bufferNum = 0, totalBufferNum = 0;
@@ -91,7 +111,7 @@ void TCPServer::recvFile(SOCKET accept)
 		char* path = new char[PATH_SIZE];
 		char nameBuf[FILE_NAME_SIZE];
 
-		strcpy_s(path, PATH_SIZE, "C:/Users/user/Desktop/recv/");
+		strcpy_s(path, PATH_SIZE, "./");
 		//strcpy_s(path, PATH_SIZE, "C:/Users/Park/Desktop/recv/");
 
 		memset(buf, 0, BUF_SIZE);
@@ -133,8 +153,8 @@ void TCPServer::recvFile(SOCKET accept)
 		{
 			if ((bytes = recv(accept, buf, BUF_SIZE, 0)) != 0)
 			{
-				m_logMessage.AddString(L" ");
-				m_logMessage.AddString(m_strTime);
+				
+				m_logMessage.AddString(strTime);
 				m_logMessage.AddString(L"Downloading file....");
 				m_logMessage.AddString(path_t);
 				bufferNum++;
@@ -164,8 +184,8 @@ void TCPServer::recvFile(SOCKET accept)
 		fclose(m_recvfp);
 		delete[] buf;
 		delete[] path;
-		m_logMessage.AddString(L" ");
-		m_logMessage.AddString(m_strTime);
+		
+		m_logMessage.AddString(strTime);
 		m_logMessage.AddString(L"Download complete");
 	}
 }

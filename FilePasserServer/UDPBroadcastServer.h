@@ -3,7 +3,7 @@
 class UDPBroadcastServer : public SocketServer
 {
 public:
-	UDPBroadcastServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime);
+	UDPBroadcastServer(CListBox& logMessage, CProgressCtrl& fileProgress);
 	~UDPBroadcastServer();
 
 	void BroadcastStart();
@@ -12,7 +12,6 @@ private:
 	void createSocket();
 	void bindSocket();
 	void recvFile();
-	CString& m_strTime;
 	CListBox& m_logMessage;
 	CProgressCtrl& m_fileProgress;
 };

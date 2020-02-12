@@ -1,8 +1,0 @@
-Serial Mode
-
-2020-02-04 09:34:07
-COM Port Connection Complete !
-
-2020-02-04 029:34:09
-COM Port Close !!!
-

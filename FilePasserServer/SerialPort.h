@@ -9,7 +9,7 @@ using namespace std;
 class SerialPort
 {
 public:
-	SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime);
+	SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress);
 	virtual ~SerialPort(void);
 
 private:
@@ -18,7 +18,6 @@ private:
 	CProgressCtrl& m_fileProgress;
 	HANDLE m_hComport;
 	DCB m_dcb;
-	CString& m_strTime;
 	CString m_eStr;
 
 public:

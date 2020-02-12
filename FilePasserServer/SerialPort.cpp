@@ -1,8 +1,8 @@
 #include "pch.h"
 #include "SerialPort.h"
 
-SerialPort::SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime)
-	: m_logMessage(logMessage), m_fileProgress(fileProgress), m_fp(nullptr), m_strTime(strTime)
+SerialPort::SerialPort(CListBox& logMessage, CProgressCtrl& fileProgress)
+	: m_logMessage(logMessage), m_fileProgress(fileProgress), m_fp(nullptr)
 {
 
 }
@@ -78,12 +78,22 @@ void SerialPort::readFile()
 
 	overlapped.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 
+	time_t t = time(NULL);
+	struct tm tm;
+	errno_t err_t = localtime_s(&tm, &t);
+	if (err_t != 0)
+	{
+		m_logMessage.AddString(L"Time ERROR!");
+	}
+	CString strTime;
+	strTime.Format(L"%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+
 	while (INFINITE_LOOP)
 	{
 		bytesRead = 600000;
 		char* token = NULL;
 		char* nextTokens = NULL;
-		char path[PATH_SIZE] = "C:/Users/user/Desktop/recv/";
+		char path[PATH_SIZE] = "./";
 
 		readStatus = ReadFile(m_hComport, buf, bytesRead, &bytesRead, &overlapped);
 		while (overlappedStatus = GetOverlappedResult(m_hComport, &overlapped, &bytesRead, TRUE))
@@ -124,7 +134,7 @@ void SerialPort::readFile()
 				{
 					m_fileProgress.SetPos(0);
 				}
-				m_logMessage.AddString(m_strTime);
+				m_logMessage.AddString(strTime);
 				m_logMessage.AddString(L"Download file complete");
 				m_logMessage.AddString(path_t);
 			}

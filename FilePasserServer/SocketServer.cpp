@@ -14,9 +14,9 @@
 #define PATH_SIZE 100
 
 // SocketServer
-SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CString& strTime)
+SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress)
 	: m_socket(NULL), m_error(0), m_recvfp(nullptr)
-	, m_logMessage(logMessage), m_fileProgress(fileProgress), m_strTime(strTime)
+	, m_logMessage(logMessage), m_fileProgress(fileProgress)
 {
 	netconfig = (network_config*)malloc(sizeof(network_config));
 	// Winsock √ ±‚»≠ 
@@ -31,7 +31,7 @@ SocketServer::SocketServer(CListBox& logMessage, CProgressCtrl& fileProgress, CS
 
 	char port[7];
 	FILE* config_fp = NULL;
-	errno_t err_f = fopen_s(&config_fp, "network_config.txt", "r");
+	errno_t err_f = fopen_s(&config_fp, ".\\network_config.txt", "r");
 	if (err_f != 0)
 	{
 		return;
