@@ -1,7 +1,7 @@
 # FilePasser
 
 - Socket
-  -TCP/IP
+-TCP/IP
   -UDP Broadcast
   -UDP Multicast 
   -UDP Unicast
