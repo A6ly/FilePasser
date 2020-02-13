@@ -8,8 +8,10 @@ File Transfer Program Using Socket Communication and Serial Communication
   - UDP Multicast
   - UDP Unicast
 </br>
+
 + Serial
   - RS-232
+
 </br>
 ![FilePasserClient](https://user-images.githubusercontent.com/32415358/74414562-033a7100-4e85-11ea-9da8-3212f9c041bf.png)
 
