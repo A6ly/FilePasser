@@ -17,4 +17,3 @@ File Transfer Program Using Socket Communication and Serial Communication
 
 ![FilePasserServer](https://user-images.githubusercontent.com/32415358/74414567-03d30780-4e85-11ea-9830-3327618a6a2d.png)<br>
 ↑ Server</br>
-</br>
