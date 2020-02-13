@@ -1,10 +1,10 @@
 # FilePasser
 
-* Socket
-  *TCP/IP
-  *UDP Broadcast
-  *UDP Multicast 
-  *UDP Unicast
+- Socket
+  -TCP/IP
+  -UDP Broadcast
+  -UDP Multicast 
+  -UDP Unicast
   
 *Serial
   *RS-232
