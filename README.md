@@ -11,14 +11,9 @@ File Transfer Program Using Socket Communication and Serial Communication
 + Serial
   - RS-232
 
-![FilePasserClient](https://user-images.githubusercontent.com/32415358/74414562-033a7100-4e85-11ea-9da8-3212f9c041bf.png)<br>
+![FilePasserClient](https://user-images.githubusercontent.com/32415358/74415184-36c9cb00-4e86-11ea-9bce-0e99805f2965.png)<br>
 ↑ Client</br>
 </br>
 
-![FilePasserServer](https://user-images.githubusercontent.com/32415358/74414567-03d30780-4e85-11ea-9830-3327618a6a2d.png)<br>
+![FilePasserServer](https://user-images.githubusercontent.com/32415358/74415186-37626180-4e86-11ea-9317-ab7d743f47f8.png)<br>
 ↑ Server</br>
-
-
-![1](https://user-images.githubusercontent.com/32415358/74303731-3229e780-4d9e-11ea-92b1-5b36f942e9af.PNG)
-
-![2](https://user-images.githubusercontent.com/32415358/74303736-3524d800-4d9e-11ea-92ff-be1b895c92d1.PNG)
